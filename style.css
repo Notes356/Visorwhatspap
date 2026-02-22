@@ -1,0 +1,463 @@
+/* ==========================================================================
+   VARIABLES GLOBALES (El núcleo estético)
+   ========================================================================== */
+:root {
+    --bg-void: #05070a;
+    --sys-blue: #00d2ff;
+    --sys-alert: #ff2a5f;
+    --solid-panel: #0a0d14;
+    --sys-border: rgba(0, 210, 255, 0.2);
+    /* Variable mágica para el control de Zoom Dinámico */
+    --chat-scale: 0.85rem; 
+}
+
+/* ==========================================================================
+   ESTRUCTURA BASE Y FONDOS
+   ========================================================================== */
+html, body {
+    background-color: var(--bg-void);
+    color: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100vh;
+    /* Fondo fijo mientras el contenido baja, clave para rendimiento */
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+}
+
+#bg-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 7, 10, 0.85);
+    z-index: -1;
+    pointer-events: none;
+}
+
+.font-sys {
+    font-family: 'Rajdhani', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ==========================================================================
+   COMPONENTES UI (Botones, Inputs, Paneles)
+   ========================================================================== */
+.solid-panel {
+    background: var(--solid-panel);
+    border-bottom: 1px solid var(--sys-border);
+}
+
+.sys-btn {
+    background: #0f172a;
+    border: 1px solid var(--sys-blue);
+    color: var(--sys-blue);
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.1s ease-in-out;
+}
+
+.sys-btn:active {
+    transform: scale(0.95);
+}
+
+.fs-btn {
+    border-color: #a855f7;
+    color: #a855f7;
+}
+
+.fs-btn:hover {
+    background: #a855f7;
+    color: #000;
+}
+
+/* Animación especial para el botón PLAY del simulador */
+.play-btn {
+    border-color: #00ff88;
+    color: #00ff88;
+    font-size: 1rem;
+}
+
+.play-btn.playing {
+    background: #00ff88;
+    color: #000;
+    animation: pulsePlay 1s infinite alternate;
+}
+
+@keyframes pulsePlay {
+    from { box-shadow: 0 0 5px #00ff88; }
+    to { box-shadow: 0 0 15px #00ff88; }
+}
+
+.sys-input, .sys-select {
+    background: #000;
+    border: 1px solid #333;
+    border-bottom: 2px solid var(--sys-blue);
+    color: #fff;
+    padding: 6px 10px;
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    outline: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+}
+
+.drop-zone {
+    border: 1px dashed var(--sys-blue);
+    background: #0a0d14;
+    border-radius: 8px;
+    margin: 20px;
+}
+
+/* ==========================================================================
+   LAYOUT PRINCIPAL (Header y Modal)
+   ========================================================================== */
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    height: 55px;
+}
+
+.main-container {
+    padding-top: 65px;
+    width: 100%;
+}
+
+#settingsModal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 60;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    width: 95%;
+    max-width: 1000px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    border-top: 2px solid var(--sys-blue);
+    border-radius: 8px;
+    background: #0a0d14;
+}
+
+/* ==========================================================================
+   MATRIZ DE IDENTIDAD (Radios y Filas)
+   ========================================================================== */
+.identity-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 8px;
+    align-items: center;
+    padding: 6px 8px;
+    border-bottom: 1px solid #1a1a1a;
+}
+
+.radio-group {
+    display: flex;
+    gap: 2px;
+    background: #000;
+    padding: 3px;
+    border-radius: 4px;
+    border: 1px solid #333;
+}
+
+.radio-label {
+    cursor: pointer;
+    padding: 4px 10px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #666;
+    border-radius: 2px;
+}
+
+.radio-input:checked + .radio-label.left-side {
+    background: #331018;
+    color: var(--sys-alert);
+}
+
+.radio-input:checked + .radio-label.right-side {
+    background: #0a2030;
+    color: var(--sys-blue);
+}
+
+.radio-input {
+    display: none;
+}
+
+/* ==========================================================================
+   SISTEMA DE BURBUJAS DE CHAT (Escala Dinámica)
+   ========================================================================== */
+.msg-container {
+    margin-bottom: 0.8rem;
+    max-width: 85%;
+    word-wrap: break-word;
+    display: flex;
+    flex-direction: column;
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.msg-wrapper {
+    /* La magia del zoom: los paddings y tamaños responden a --chat-scale */
+    padding: calc(var(--chat-scale) * 0.6) calc(var(--chat-scale) * 1);
+    background: #0d121c;
+    border: 1px solid #1f2937;
+    position: relative;
+    font-size: var(--chat-scale);
+    transition: all 0.3s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    will-change: transform;
+}
+
+.msg-left {
+    align-items: flex-start;
+    margin-right: auto;
+}
+
+.msg-left .msg-wrapper {
+    border-left: 3px solid var(--sys-alert);
+    border-radius: 0 12px 12px 12px;
+}
+
+.msg-right {
+    align-items: flex-end;
+    margin-left: auto;
+}
+
+.msg-right .msg-wrapper {
+    border-right: 3px solid var(--sys-blue);
+    border-radius: 12px 0 12px 12px;
+}
+
+/* Animación base de respiración para los nombres */
+@keyframes nameFloatBase {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-1.5px); }
+}
+
+.name-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: calc(var(--chat-scale) * 0.9);
+    font-weight: 700;
+    margin-bottom: 3px;
+    display: inline-block;
+    animation: nameFloatBase 3s ease-in-out infinite;
+    transition: all 0.3s ease;
+}
+
+.msg-left .name-label { color: var(--sys-alert); }
+.msg-right .name-label { color: var(--sys-blue); }
+
+.timestamp {
+    font-size: calc(var(--chat-scale) * 0.7);
+    color: #64748b;
+    margin-top: 4px;
+    text-align: right;
+}
+
+/* Separadores de Fecha */
+.date-divider {
+    text-align: center;
+    margin: 1.5rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    scroll-margin-top: 70px;
+    transition: opacity 0.5s;
+}
+
+.date-divider span {
+    background: #000;
+    border: 1px solid #333;
+    padding: 4px 16px;
+    border-radius: 16px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: calc(var(--chat-scale) * 0.8);
+    color: #94a3b8;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Manejo de Multimedia (También escalable) */
+.media-file {
+    max-width: 100%;
+    max-height: calc(var(--chat-scale) * 15);
+    object-fit: contain;
+    border-radius: 6px;
+    margin-top: 6px;
+    background: #000;
+    transition: max-height 0.3s;
+}
+
+.sticker-file {
+    max-width: calc(var(--chat-scale) * 8);
+    max-height: calc(var(--chat-scale) * 8);
+    object-fit: contain;
+    margin-top: 4px;
+    transition: all 0.3s;
+}
+
+/* ==========================================================================
+   BARRA DE PROGRESO Y OVERLAYS
+   ========================================================================== */
+#syncOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 100;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.pixel-bar-container {
+    width: 80%;
+    max-width: 300px;
+    padding: 4px;
+    background: #000;
+    border: 2px solid var(--sys-blue);
+    box-shadow: 4px 4px 0 rgba(0, 210, 255, 0.2);
+    position: relative;
+    margin: 15px 0;
+    display: none;
+}
+
+.pixel-bar-fill {
+    height: 18px;
+    background: var(--sys-blue);
+    width: 0%;
+    transition: width 0.1s linear;
+}
+
+.pixel-bar-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Rajdhani', monospace;
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #fff;
+    text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+}
+
+/* Utilidad para el Modo Reproductor (Simulador) */
+.sim-hidden {
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   MOTOR DE VFX (OVERDRIVE) - EFECTOS EXTREMOS
+   ========================================================================== */
+
+/* 1. ESTADO FUEGO / IRA */
+@keyframes shakeRage {
+    0% { transform: translate(1px, 1px) rotate(0deg); }
+    25% { transform: translate(-1px, -1px) rotate(-0.5deg); }
+    50% { transform: translate(-1px, 1px) rotate(0.5deg); }
+    75% { transform: translate(1px, -1px) rotate(0deg); }
+    100% { transform: translate(1px, 1px) rotate(0deg); }
+}
+
+@keyframes fireGradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.fx-fire {
+    border-left-color: #ff2a00 !important;
+    border-right-color: #ff2a00 !important;
+    box-shadow: inset 0 0 20px rgba(255, 42, 0, 0.15);
+    animation: shakeRage 0.3s infinite;
+}
+
+.fx-fire .name-label {
+    background: linear-gradient(90deg, #ff0000, #ff7b00, #ff0000);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: fireGradient 2s ease infinite;
+    text-shadow: 0px 0px 10px rgba(255, 0, 0, 0.4);
+}
+
+/* 2. ESTADO TOXICO / GLITCH / IRONÍA */
+@keyframes glitchAnim {
+    0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 2px); }
+    20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -2px); }
+    40% { clip-path: inset(40% 0 50% 0); transform: translate(-2px, 2px); }
+    60% { clip-path: inset(80% 0 5% 0); transform: translate(2px, -2px); }
+    80% { clip-path: inset(10% 0 70% 0); transform: translate(-2px, 2px); }
+    100% { clip-path: inset(30% 0 50% 0); transform: translate(0); }
+}
+
+.fx-toxic {
+    border-left-color: #00ff00 !important;
+    border-right-color: #00ff00 !important;
+    border-style: dashed;
+}
+
+.fx-toxic .name-label {
+    color: #00ff00;
+    text-shadow: 2px 0px 0px #ff00ff, -2px 0px 0px #00ffff;
+    animation: glitchAnim 2s infinite linear alternate-reverse;
+}
+
+/* 3. ESTADO MAGIA / AMOR */
+@keyframes glowPulse {
+    0% { text-shadow: 0 0 5px #ff69b4; transform: scale(1); }
+    50% { text-shadow: 0 0 20px #ff69b4, 0 0 30px #da70d6; transform: scale(1.05); }
+    100% { text-shadow: 0 0 5px #ff69b4; transform: scale(1); }
+}
+
+.fx-love {
+    border-left-color: #ff69b4 !important;
+    border-right-color: #ff69b4 !important;
+    background: linear-gradient(135deg, rgba(255,105,180,0.05), transparent) !important;
+}
+
+.fx-love .name-label {
+    color: #ffb6c1;
+    animation: glowPulse 2s infinite;
+}
+
+/* 4. ESTADO FRÍO / TRISTEZA */
+@keyframes shiverCold {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-2px); }
+    40%, 80% { transform: translateX(2px); }
+}
+
+.fx-cold {
+    border-left-color: #00ffff !important;
+    border-right-color: #00ffff !important;
+    background: linear-gradient(180deg, rgba(0,255,255,0.05), rgba(0,0,0,0)) !important;
+    animation: shiverCold 3s infinite;
+}
+
+.fx-cold .name-label {
+    color: #e0f7fa;
+    text-shadow: 0 0 8px #00ffff, 0 0 15px #00bfff;
+}
+
+
