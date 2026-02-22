@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AETHER // V15_NEXUS</title>
+    <title>AETHER // V16_PIXEL_CORE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -18,6 +18,8 @@
             background-color: var(--bg-void); color: #e2e8f0; font-family: 'Inter', sans-serif;
             margin: 0; padding: 0; width: 100vw; height: 100vh; height: 100dvh;
             position: fixed; top: 0; left: 0; overflow: hidden; 
+            /* FIX DE SCROLL: Bloquea el gesto de "Deslizar para recargar" nativo de Android */
+            overscroll-behavior-y: none; 
             display: flex; flex-direction: column;
             background-size: cover; background-position: center;
         }
@@ -82,7 +84,26 @@
         .drop-zone { border: 1px dashed var(--sys-blue); background: #0a0d14; border-radius: 8px; }
         #syncOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; }
         
-        #chatUI { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        /* FIX DE SCROLL PARA EL CHAT */
+        #chatUI { 
+            flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; 
+            overscroll-behavior-y: contain; /* Evita que el scroll del chat empuje la pantalla */
+        }
+
+        /* BARRA DE PROGRESO PIXEL ART */
+        .pixel-bar-container {
+            width: 80%; max-width: 300px; height: 22px; border: 2px solid var(--sys-blue);
+            background: #000; position: relative; margin-top: 15px; display: none;
+            box-shadow: 4px 4px 0 rgba(0, 210, 255, 0.2);
+        }
+        .pixel-bar-fill {
+            height: 100%; background: var(--sys-blue); width: 0%;
+        }
+        .pixel-bar-text {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            font-family: 'Rajdhani', monospace; font-weight: bold; font-size: 0.85rem; color: #fff;
+            text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+        }
     </style>
 </head>
 <body>
@@ -90,12 +111,18 @@
     <div id="bg-overlay"></div>
     <div id="syncOverlay">
         <div class="font-sys text-[var(--sys-blue)] text-2xl font-bold" id="overlayText">INICIALIZANDO...</div>
-        <div class="text-gray-500 text-sm mt-2 font-mono" id="overlaySubtext">Por favor espere.</div>
+        
+        <div class="pixel-bar-container" id="progressBarContainer">
+            <div class="pixel-bar-fill" id="progressBarFill"></div>
+            <div class="pixel-bar-text" id="progressBarText">0%</div>
+        </div>
+
+        <div class="text-gray-500 text-sm mt-3 font-mono" id="overlaySubtext">Por favor espere.</div>
     </div>
 
     <header class="px-4 py-3 solid-panel z-30 shrink-0 flex justify-between items-center relative w-full">
         <h1 class="text-lg font-bold text-white font-sys flex items-center gap-2">
-            AETHER <span class="text-[var(--sys-blue)] font-normal text-sm opacity-70">| APK_V15</span>
+            AETHER <span class="text-[var(--sys-blue)] font-normal text-sm opacity-70">| PIXEL_CORE</span>
         </h1>
         <div class="flex gap-2">
             <button id="addMoreBtn" class="sys-btn font-sys hidden" style="border-color: #a855f7; color: #a855f7;">+ ARCHIVOS</button>
@@ -162,6 +189,11 @@
         const overlayText = document.getElementById('overlayText');
         const overlaySubtext = document.getElementById('overlaySubtext');
         
+        // Elementos de la Barra de Progreso
+        const progressBarContainer = document.getElementById('progressBarContainer');
+        const progressBarFill = document.getElementById('progressBarFill');
+        const progressBarText = document.getElementById('progressBarText');
+
         const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
         const addMoreBtn = document.getElementById('addMoreBtn');
         const settingsModal = document.getElementById('settingsModal');
@@ -181,21 +213,19 @@
         let userAlignmentMap = {}; 
         let userAliasMap = {};     
 
-        // ==========================================
-        // SISTEMA DE BASE DE DATOS ANTI-CRASH
-        // ==========================================
+        // BASE DE DATOS
         const DB_NAME = "AetherDB_V2";
         let db;
 
         function initDB() {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 const request = indexedDB.open(DB_NAME, 1);
                 request.onupgradeneeded = (e) => {
                     db = e.target.result;
                     if (!db.objectStoreNames.contains('dataStore')) db.createObjectStore('dataStore');
                 };
                 request.onsuccess = (e) => { db = e.target.result; resolve(); };
-                request.onerror = (e) => { console.error("Error DB", e); resolve(); }; // Resuelve para no congelar
+                request.onerror = (e) => resolve();
             });
         }
 
@@ -216,11 +246,7 @@
                     store.put({ userAlignmentMap, userAliasMap }, 'config');
                     
                     tx.oncomplete = () => resolve();
-                    tx.onerror = (e) => {
-                        console.error("Android bloqueó el guardado por el tamaño.");
-                        resolve(); // EVITA EL CONGELAMIENTO
-                    };
-                    tx.onabort = () => resolve();
+                    tx.onerror = () => resolve();
                 } catch(e) { resolve(); }
             });
         }
@@ -251,9 +277,7 @@
                             globalMediaFiles = {};
                             if(loadedMedia) {
                                 for(let key in loadedMedia) {
-                                    try {
-                                        globalMediaFiles[key] = { blob: loadedMedia[key].blob, url: URL.createObjectURL(loadedMedia[key].blob) };
-                                    } catch(err) {}
+                                    try { globalMediaFiles[key] = { blob: loadedMedia[key].blob, url: URL.createObjectURL(loadedMedia[key].blob) }; } catch(err) {}
                                 }
                             }
                             
@@ -290,27 +314,47 @@
         filesInput.addEventListener('change', async (e) => {
             const files = Array.from(e.target.files); if (files.length === 0) return;
             
-            syncOverlay.style.display = 'flex'; overlayText.innerText = "EXTRAYENDO...";
+            syncOverlay.style.display = 'flex'; 
+            overlayText.innerText = "EXTRAYENDO PAQUETE...";
+            overlaySubtext.innerText = "Descomprimiendo archivos";
+            progressBarContainer.style.display = 'block';
+            progressBarFill.style.width = '0%';
+            progressBarText.innerText = '0%';
             
             try {
                 let textLogs = [];
                 for (let file of files) {
                     if (file.name.endsWith('.zip')) {
-                        const zip = await JSZip.loadAsync(file); const fileNames = Object.keys(zip.files);
-                        for (let i = 0; i < fileNames.length; i++) {
+                        const zip = await JSZip.loadAsync(file); 
+                        const fileNames = Object.keys(zip.files);
+                        const total = fileNames.length;
+
+                        for (let i = 0; i < total; i++) {
                             const filename = fileNames[i]; const fileData = zip.files[filename];
                             if (fileData.dir) continue;
+                            
                             if (filename.endsWith('.txt')) textLogs.push(await fileData.async("string"));
                             else {
                                 const blob = await fileData.async("blob");
                                 globalMediaFiles[filename] = { url: URL.createObjectURL(blob), blob: blob };
                             }
+
+                            // Actualiza la barra de progreso cada 5 archivos para no retrasar el proceso
+                            if (i % 5 === 0 || i === total - 1) {
+                                let pct = Math.floor(((i + 1) / total) * 100);
+                                progressBarFill.style.width = pct + '%';
+                                progressBarText.innerText = pct + '%';
+                                // Forzamos al navegador a dibujar la pantalla
+                                await new Promise(r => setTimeout(r, 0)); 
+                            }
                         }
                     } else if (file.name.endsWith('.txt')) textLogs.push(await file.text());
                     else globalMediaFiles[file.name] = { url: URL.createObjectURL(file), blob: file };
                 }
+                
+                progressBarContainer.style.display = 'none';
                 setTimeout(() => processRawTexts(textLogs), 50);
-            } catch (err) { alert("ERROR: " + err.message); syncOverlay.style.display = 'none'; }
+            } catch (err) { alert("ERROR: " + err.message); syncOverlay.style.display = 'none'; progressBarContainer.style.display = 'none'; }
             filesInput.value = ""; 
         });
 
@@ -328,6 +372,7 @@
 
         async function processRawTexts(textLogsArray) {
             overlayText.innerText = "ORDENANDO DATOS...";
+            overlaySubtext.innerText = "Procesando mensajes de texto.";
             const msgRegex = /^\[?(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})[, ]+(\d{1,2}:\d{2}(?::\d{2})?\s*(?:[a-zA-Z\.]{1,4})?)\]?\s*[\-]?\s*([^:]+):\s*(.*)/;
             
             let uniqueSignatures = new Set();
@@ -355,6 +400,7 @@
             buildIdentityMatrixUI();
             
             overlayText.innerText = "GUARDANDO...";
+            overlaySubtext.innerText = "Asegurando persistencia de datos.";
             await saveStateToDB();
             
             loaderUI.style.display = 'none'; chatUI.style.display = 'block';
@@ -485,3 +531,4 @@
     </script>
 </body>
 </html>
+ 
