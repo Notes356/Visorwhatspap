@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AETHER // V22_OVERDRIVE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-void: #05070a; --sys-blue: #00d2ff; --sys-alert: #ff2a5f;
+            --solid-panel: #0a0d14; --sys-border: rgba(0, 210, 255, 0.2);
+        }
+        
+        html, body {
+            background-color: var(--bg-void); color: #e2e8f0; font-family: 'Inter', sans-serif;
+            margin: 0; padding: 0; width: 100%; min-height: 100vh;
+            background-attachment: fixed; background-size: cover; background-position: center;
+            overflow-x: hidden;
+        }
+
+        #bg-overlay { position: fixed; inset: 0; background: rgba(5,7,10,0.85); z-index: -1; pointer-events: none; }
+        .font-sys { font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; }
+        .solid-panel { background: var(--solid-panel); border-bottom: 1px solid var(--sys-border); }
+
+        .sys-btn {
+            background: #0f172a; border: 1px solid var(--sys-blue); color: var(--sys-blue); 
+            padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.75rem; 
+            display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.1s;
+        }
+        .sys-btn:active { transform: scale(0.98); }
+        .fs-btn { border-color: #a855f7; color: #a855f7; }
+        .fs-btn:hover { background: #a855f7; color: #000; }
+        
+        .sys-input, .sys-select {
+            background: #000; border: 1px solid #333; border-bottom: 2px solid var(--sys-blue);
+            color: #fff; padding: 6px 10px; width: 100%; border-radius: 4px 4px 0 0; outline: none; 
+            font-family: 'Inter', sans-serif; font-size: 0.75rem;
+        }
+
+        header { position: fixed; top: 0; left: 0; right: 0; z-index: 50; height: 55px; }
+        .main-container { padding-top: 65px; width: 100%; }
+
+        #settingsModal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95); z-index: 60; display: none; align-items: center; justify-content: center; }
+        .modal-content { width: 95%; max-width: 1000px; max-height: 90vh; display: flex; flex-direction: column; border-top: 2px solid var(--sys-blue); border-radius: 8px; background: #0a0d14; }
+
+        .identity-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: center; padding: 6px 8px; border-bottom: 1px solid #1a1a1a; }
+        .radio-group { display: flex; gap: 2px; background: #000; padding: 3px; border-radius: 4px; border: 1px solid #333;}
+        .radio-label { cursor: pointer; padding: 4px 10px; font-size: 0.65rem; font-weight: 600; color: #666; border-radius: 2px; }
+        .radio-input:checked + .radio-label.left-side { background: #331018; color: var(--sys-alert); }
+        .radio-input:checked + .radio-label.right-side { background: #0a2030; color: var(--sys-blue); }
+        .radio-input { display: none; }
+
+        .msg-container { margin-bottom: 0.5rem; max-width: 85%; word-wrap: break-word; display: flex; flex-direction: column; }
+        .msg-wrapper { padding: 8px 12px; background: #0d121c; border: 1px solid #1f2937; position: relative; will-change: transform; }
+        .msg-left { align-items: flex-start; margin-right: auto; }
+        .msg-left .msg-wrapper { border-left: 3px solid var(--sys-alert); border-radius: 0 8px 8px 8px; }
+        .msg-right { align-items: flex-end; margin-left: auto; }
+        .msg-right .msg-wrapper { border-right: 3px solid var(--sys-blue); border-radius: 8px 0 8px 8px; }
+        
+        .name-label { font-family: 'Rajdhani', sans-serif; font-size: 0.85rem; font-weight: 700; margin-bottom: 2px; transition: all 0.3s ease; }
+        .msg-left .name-label { color: var(--sys-alert); }
+        .msg-right .name-label { color: var(--sys-blue); }
+        .timestamp { font-size: 0.65rem; color: #64748b; margin-top: 2px; text-align: right; }
+
+        .date-divider { text-align: center; margin: 1rem 0; display: flex; align-items: center; justify-content: center; scroll-margin-top: 70px; }
+        .date-divider span { background: #000; border: 1px solid #333; padding: 2px 12px; border-radius: 12px; font-family: 'Rajdhani', sans-serif; font-size: 0.75rem; color: #94a3b8; }
+
+        .media-file { max-width: 100%; max-height: 250px; object-fit: contain; border-radius: 4px; margin-top: 4px; background: #000; }
+        .sticker-file { max-width: 120px; max-height: 120px; object-fit: contain; margin-top: 2px; }
+        .drop-zone { border: 1px dashed var(--sys-blue); background: #0a0d14; border-radius: 8px; margin: 20px; }
+        #syncOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; }
+
+        .pixel-bar-container { width: 80%; max-width: 300px; padding: 4px; background: #000; border: 2px solid var(--sys-blue); box-shadow: 4px 4px 0 rgba(0, 210, 255, 0.2); position: relative; margin: 15px 0; display: none; }
+        .pixel-bar-fill { height: 18px; background: var(--sys-blue); width: 0%; transition: width 0.1s linear; }
+        .pixel-bar-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Rajdhani', monospace; font-weight: bold; font-size: 0.9rem; color: #fff; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; }
+
+        /* ====================================================================
+           SISTEMA DE EFECTOS VISUALES EXTREMOS (OVERDRIVE VFX)
+           ==================================================================== */
+        
+        /* 1. ESTADO FUEGO / IRA */
+        @keyframes shakeRage { 
+            0% { transform: translate(1px, 1px) rotate(0deg); } 
+            25% { transform: translate(-1px, -1px) rotate(-0.5deg); } 
+            50% { transform: translate(-1px, 1px) rotate(0.5deg); } 
+            75% { transform: translate(1px, -1px) rotate(0deg); } 
+            100% { transform: translate(1px, 1px) rotate(0deg); } 
+        }
+        @keyframes fireGradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        
+        .fx-fire { 
+            border-left-color: #ff2a00 !important; border-right-color: #ff2a00 !important; 
+            box-shadow: inset 0 0 20px rgba(255, 42, 0, 0.15);
+            animation: shakeRage 0.3s infinite;
+        }
+        .fx-fire .name-label { 
+            background: linear-gradient(90deg, #ff0000, #ff7b00, #ff0000); background-size: 200% 200%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+            animation: fireGradient 2s ease infinite;
+            text-shadow: 0px 0px 10px rgba(255, 0, 0, 0.4);
+        }
+
+        /* 2. ESTADO TOXICO / GLITCH / IRONÍA */
+        @keyframes glitchAnim {
+            0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 2px); }
+            20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -2px); }
+            40% { clip-path: inset(40% 0 50% 0); transform: translate(-2px, 2px); }
+            60% { clip-path: inset(80% 0 5% 0); transform: translate(2px, -2px); }
+            80% { clip-path: inset(10% 0 70% 0); transform: translate(-2px, 2px); }
+            100% { clip-path: inset(30% 0 50% 0); transform: translate(0); }
+        }
+        .fx-toxic {
+            border-left-color: #00ff00 !important; border-right-color: #00ff00 !important;
+            border-style: dashed;
+        }
+        .fx-toxic .name-label {
+            color: #00ff00;
+            text-shadow: 2px 0px 0px #ff00ff, -2px 0px 0px #00ffff;
+            animation: glitchAnim 2s infinite linear alternate-reverse;
+        }
+        .fx-toxic::after { content: '⚠️'; position: absolute; right: 5px; top: 5px; font-size: 10px; opacity: 0.5; }
+
+        /* 3. ESTADO MAGIA / AMOR */
+        @keyframes glowPulse { 0% { text-shadow: 0 0 5px #ff69b4; } 50% { text-shadow: 0 0 20px #ff69b4, 0 0 30px #da70d6; } 100% { text-shadow: 0 0 5px #ff69b4; } }
+        .fx-love { 
+            border-left-color: #ff69b4 !important; border-right-color: #ff69b4 !important; 
+            background: linear-gradient(135deg, rgba(255,105,180,0.05), transparent) !important;
+        }
+        .fx-love .name-label {
+            color: #ffb6c1;
+            animation: glowPulse 2s infinite;
+        }
+
+        /* 4. ESTADO FRÍO / TRISTEZA */
+        @keyframes shiverCold { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-1px); } 40%, 80% { transform: translateX(1px); } }
+        .fx-cold { 
+            border-left-color: #00ffff !important; border-right-color: #00ffff !important; 
+            background: linear-gradient(180deg, rgba(0,255,255,0.05), rgba(0,0,0,0)) !important;
+            animation: shiverCold 3s infinite;
+        }
+        .fx-cold .name-label {
+            color: #e0f7fa;
+            text-shadow: 0 0 8px #00ffff, 0 0 15px #00bfff;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="bg-overlay"></div>
+    <audio id="globalAudioPlayer" loop></audio>
+    
+    <div id="syncOverlay">
+        <div class="font-sys text-[var(--sys-blue)] text-2xl font-bold" id="overlayText">INICIALIZANDO</div>
+        <div class="pixel-bar-container" id="pixelBarContainer">
+            <div class="pixel-bar-fill" id="pixelBarFill"></div>
+            <div class="pixel-bar-text" id="pixelBarText">0%</div>
+        </div>
+        <div class="text-gray-500 text-sm mt-2 font-mono" id="overlaySubtext">Por favor espere...</div>
+    </div>
+
+    <header class="px-4 solid-panel shrink-0 flex justify-between items-center w-full">
+        <h1 class="text-lg font-bold text-white font-sys flex items-center gap-2">
+            AETHER <span class="text-[var(--sys-blue)] font-normal text-sm opacity-70 hidden md:inline">| OVERDRIVE V22</span>
+        </h1>
+        <div class="flex gap-2">
+            <button id="fullscreenBtn" class="sys-btn fs-btn font-sys hidden" title="Pantalla Completa">[ ]</button>
+            <button id="toggleMusicBtn" class="sys-btn font-sys hidden" style="border-color: #00ff88; color: #00ff88;" title="Reproducir/Pausar">🎵</button>
+            <button id="addMoreBtn" class="sys-btn font-sys hidden">+ DATOS</button>
+            <button id="toggleSettingsBtn" class="sys-btn font-sys hidden">AJUSTES</button>
+        </div>
+    </header>
+
+    <div id="settingsModal">
+        <div class="modal-content">
+            <div class="p-3 border-b border-[#333] flex justify-between items-center bg-[#05070a]">
+                <h2 class="text-sm font-sys text-[var(--sys-blue)] font-bold">PANEL OMNI_CORE</h2>
+                <button id="closeModalBtn" class="text-gray-500 hover:text-white text-xl font-mono px-2">X</button>
+            </div>
+            
+            <div class="p-4 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 bg-[#0a0d14]">
+                <div class="flex flex-col gap-3">
+                    <div class="bg-[#05070a] p-3 border border-[#333] border-l-2 border-l-[var(--sys-alert)]">
+                        <h3 class="text-[10px] font-sys text-[var(--sys-alert)] mb-1 font-bold">SALTO TEMPORAL</h3>
+                        <select id="jumpDateSelect" class="sys-select mb-2"><option value="">[ SELECCIONAR FECHA ]</option></select>
+                        <button id="jumpBtn" class="sys-btn w-full" style="border-color: var(--sys-alert); color: var(--sys-alert);">EJECUTAR SALTO</button>
+                    </div>
+                    <div class="flex flex-col gap-2 bg-[#05070a] p-3 border border-[#333]">
+                        <h3 class="text-[10px] font-sys text-[var(--sys-blue)] mb-1">FILTROS GLOBALES</h3>
+                        <input type="text" id="searchInput" placeholder="Buscar texto..." class="sys-input">
+                        <select id="filterSelect" class="sys-select">
+                            <option value="all">TODOS LOS MENSAJES</option>
+                            <option value="photo">SOLO IMÁGENES</option>
+                            <option value="sticker">SOLO STICKERS</option>
+                            <option value="video">SOLO VIDEOS</option>
+                            <option value="audio">SOLO AUDIOS</option>
+                        </select>
+                        <div class="grid grid-cols-2 gap-2 mt-1">
+                            <div><label class="text-[9px] text-gray-500">DESDE</label><input type="date" id="dateStart" class="sys-input px-1"></div>
+                            <div><label class="text-[9px] text-gray-500">HASTA</label><input type="date" id="dateEnd" class="sys-input px-1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <div class="bg-[#05070a] p-3 border border-[#333] border-l-2 border-l-[#00ff88]">
+                        <h3 class="text-[10px] font-sys text-[#00ff88] mb-1 font-bold">CONTADOR DE PALABRAS</h3>
+                        <div class="flex gap-2 mb-2">
+                            <input type="text" id="countInput" placeholder="Palabra o frase..." class="sys-input flex-1">
+                            <button id="countBtn" class="sys-btn" style="border-color: #00ff88; color: #00ff88;">CONTAR</button>
+                        </div>
+                        <div id="countResult" class="text-[10px] text-gray-300 font-mono mt-2 bg-black p-2 rounded hidden"></div>
+                    </div>
+                    <div class="bg-[#05070a] p-3 border border-[#333]">
+                        <h3 class="text-[10px] font-sys text-white mb-1">FONDO VISUAL (JPG/GIF)</h3>
+                        <input type="file" id="bgInput" accept="image/*" class="sys-input text-[9px] mb-1 p-1">
+                        <button id="clearBgBtn" class="text-[9px] text-gray-500 hover:text-white">X QUITAR FONDO</button>
+                    </div>
+                    <div class="bg-[#05070a] p-3 border border-[#333]">
+                        <h3 class="text-[10px] font-sys text-[#a855f7] mb-1">MÚSICA DE FONDO (MP3/WAV)</h3>
+                        <input type="file" id="musicInput" accept="audio/*" class="sys-input text-[9px] mb-1 p-1">
+                        <button id="clearMusicBtn" class="text-[9px] text-gray-500 hover:text-white">X QUITAR MÚSICA</button>
+                    </div>
+                    <button id="purgeBtn" class="sys-btn w-full mt-auto" style="border-color: red; color: red; background: rgba(255,0,0,0.1);">⚠️ BORRAR MEMORIA (RESET)</button>
+                </div>
+
+                <div class="flex flex-col">
+                    <h3 class="text-xs font-sys text-white mb-2">MATRIZ DE IDENTIDAD (ALIAS Y POSICIÓN)</h3>
+                    <div id="identityMatrix" class="flex-1 bg-[#000] border border-[#333] overflow-y-auto max-h-[45vh] md:max-h-full"></div>
+                </div>
+            </div>
+            <div class="p-3 border-t border-[#333] flex justify-end bg-[#05070a]">
+                <button id="applyMappingBtn" class="sys-btn font-sys">GUARDAR Y RENDERIZAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <input type="file" id="filesInput" multiple accept=".zip,.txt,image/*,video/*,audio/*,.webp" class="hidden">
+        <div id="loaderUI" class="flex items-center justify-center p-4 z-10 w-full h-[80vh]">
+            <div class="drop-zone solid-panel p-6 text-center w-full max-w-lg cursor-pointer" onclick="document.getElementById('filesInput').click()">
+                <h2 class="text-xl font-sys font-bold text-[var(--sys-blue)] mb-1">SISTEMA INACTIVO</h2>
+                <p class="text-gray-400 text-xs mb-4">Toque aquí para cargar sus archivos.<br>(Los datos se guardan permanentemente)</p>
+            </div>
+        </div>
+        <main id="chatUI" class="hidden">
+            <div id="messagesDiv" class="max-w-4xl mx-auto flex flex-col pb-10 pt-2 w-full px-2"></div>
+        </main>
+    </div>
+
+    <script>
+        // DOM Elements
+        const filesInput = document.getElementById('filesInput');
+        const loaderUI = document.getElementById('loaderUI');
+        const chatUI = document.getElementById('chatUI');
+        const messagesDiv = document.getElementById('messagesDiv');
+        
+        const syncOverlay = document.getElementById('syncOverlay');
+        const overlayText = document.getElementById('overlayText');
+        const overlaySubtext = document.getElementById('overlaySubtext');
+        const pixelBarContainer = document.getElementById('pixelBarContainer');
+        const pixelBarFill = document.getElementById('pixelBarFill');
+        const pixelBarText = document.getElementById('pixelBarText');
+        
+        const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
+        const addMoreBtn = document.getElementById('addMoreBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const purgeBtn = document.getElementById('purgeBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        
+        const searchInput = document.getElementById('searchInput');
+        const filterSelect = document.getElementById('filterSelect');
+        const dateStart = document.getElementById('dateStart');
+        const dateEnd = document.getElementById('dateEnd');
+        
+        const identityMatrix = document.getElementById('identityMatrix');
+        const applyMappingBtn = document.getElementById('applyMappingBtn');
+        const jumpDateSelect = document.getElementById('jumpDateSelect');
+        const jumpBtn = document.getElementById('jumpBtn');
+
+        const countInput = document.getElementById('countInput');
+        const countBtn = document.getElementById('countBtn');
+        const countResult = document.getElementById('countResult');
+        const bgInput = document.getElementById('bgInput');
+        const clearBgBtn = document.getElementById('clearBgBtn');
+        const musicInput = document.getElementById('musicInput');
+        const clearMusicBtn = document.getElementById('clearMusicBtn');
+        const globalAudioPlayer = document.getElementById('globalAudioPlayer');
+        const toggleMusicBtn = document.getElementById('toggleMusicBtn');
+
+        // Variables Globales
+        let globalMediaFiles = {}; 
+        let globalMessages = []; 
+        let detectedSenders = new Set();
+        let userAlignmentMap = {}; 
+        let userAliasMap = {};     
+        let customBgBlob = null; 
+        let customMusicBlob = null;
+
+        // ====================================================================
+        // DICCIONARIO DE EXPRESIONES REGULARES (VFX ENGINE)
+        // Repertorio de palabras expansivo, sin censura ni contención.
+        // ====================================================================
+        const vfxDictionary = [
+            {
+                class: 'fx-fire',
+                regex: /\b(fuego|calor|arde|quema|odio|enojo|rabia|maldit[oa]|hdp|ctm|put[oa]|mierda|mrd|carajo|verga|ptm|joder|estupid[oa]|imbecil|idiota|matar|muere|infierno|peligro|bala|sangre|golpe|pelea|callate|perra|cabron|pendejo|🔥|🤬|😡|💢)\b/i
+            },
+            {
+                class: 'fx-toxic',
+                regex: /\b(ironia|sarcasmo|xd|xdd|lmao|lol|wtf|nmms|wey|weon|cringe|basado|funado|bruh|literal|esquizofrenia|xddd|XD|wtf|alv|clown|payaso|paja|chiste|random|bizarro|🤡|💩|💀|👽)\b/i
+            },
+            {
+                class: 'fx-love',
+                regex: /\b(amor|te amo|te quiero|hermos[oa]|bonit[oa]|lind[oa]|precios[oa]|bb|bebe|bbita|corazon|vida mia|cielo|mi reina|mi rey|espos[oa]|novi[oa]|casate|beso|abrazo|cariño|ternura|perfect[oa]|magia|😍|🥰|😘|❤️|💕|💖|✨)\b/i
+            },
+            {
+                class: 'fx-cold',
+                regex: /\b(frio|hielo|nieve|congelad[oa]|triste|lloro|dolor|depresion|ansiedad|rip|f|soledad|vacio|lagrimas|roto|corazon roto|muerto|fallecio|depre|agotad[oa]|cansad[oa]|😭|😢|💔|🥶|🧊)\b/i
+            }
+        ];
+
+        // UI PROGRESO
+        function showProgressScreen(title, subtitle) {
+            syncOverlay.style.display = 'flex'; overlayText.innerText = title; overlaySubtext.innerText = subtitle;
+            pixelBarContainer.style.display = 'block'; updateProgress(0);
+        }
+        function updateProgress(pct) { pixelBarFill.style.width = pct + '%'; pixelBarText.innerText = pct + '%'; }
+        function hideProgressScreen() { syncOverlay.style.display = 'none'; pixelBarContainer.style.display = 'none'; }
+
+        // PANTALLA COMPLETA
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+            else if (document.exitFullscreen) document.exitFullscreen();
+        });
+
+        // ==========================================
+        // BASE DE DATOS
+        // ==========================================
+        const DB_NAME = "AetherDB_V4"; let db;
+
+        function initDB() {
+            return new Promise((resolve) => {
+                const request = indexedDB.open(DB_NAME, 1);
+                request.onupgradeneeded = (e) => {
+                    db = e.target.result;
+                    if (!db.objectStoreNames.contains('dataStore')) db.createObjectStore('dataStore');
+                };
+                request.onsuccess = (e) => { db = e.target.result; resolve(); };
+                request.onerror = () => resolve();
+            });
+        }
+
+        async function saveStateToDB() {
+            return new Promise((resolve) => {
+                try {
+                    const tx = db.transaction('dataStore', 'readwrite'); const store = tx.objectStore('dataStore');
+                    let mediaToSave = {};
+                    for(let key in globalMediaFiles) mediaToSave[key] = { blob: globalMediaFiles[key].blob };
+                    
+                    store.put(globalMessages, 'messages');
+                    store.put(mediaToSave, 'media');
+                    store.put(Array.from(detectedSenders), 'senders');
+                    store.put({ userAlignmentMap, userAliasMap, customBgBlob, customMusicBlob }, 'config');
+                    
+                    tx.oncomplete = () => resolve(); tx.onerror = () => resolve();
+                } catch(e) { resolve(); }
+            });
+        }
+
+        async function loadStateFromDB() {
+            showProgressScreen("CONECTANDO...", "Cargando memoria principal"); updateProgress(20);
+            return new Promise((resolve) => {
+                try {
+                    const tx = db.transaction('dataStore', 'readonly'); const store = tx.objectStore('dataStore');
+                    let m = null, md = null, s = null, c = null;
+
+                    store.get('messages').onsuccess = (e) => m = e.target.result;
+                    store.get('media').onsuccess = (e) => md = e.target.result;
+                    store.get('senders').onsuccess = (e) => s = e.target.result;
+                    store.get('config').onsuccess = (e) => c = e.target.result;
+
+                    tx.oncomplete = async () => {
+                        updateProgress(60);
+                        if (m && m.length > 0) {
+                            globalMessages = m; detectedSenders = new Set(s || []);
+                            if(c) {
+                                userAlignmentMap = c.userAlignmentMap || {}; userAliasMap = c.userAliasMap || {};
+                                if (c.customBgBlob) { customBgBlob = c.customBgBlob; applyBackground(customBgBlob); }
+                                if (c.customMusicBlob) { customMusicBlob = c.customMusicBlob; applyMusic(customMusicBlob); }
+                            }
+                            globalMediaFiles = {};
+                            if(md) {
+                                for(let key in md) {
+                                    try { globalMediaFiles[key] = { blob: md[key].blob, url: URL.createObjectURL(md[key].blob) }; } catch(err) {}
+                                }
+                            }
+                            updateProgress(100); buildIdentityMatrixUI();
+                            loaderUI.style.display = 'none'; chatUI.style.display = 'block';
+                            toggleSettingsBtn.style.display = 'flex'; addMoreBtn.style.display = 'flex';
+                            fullscreenBtn.style.display = 'flex';
+                            await renderChat();
+                        } else { hideProgressScreen(); }
+                        resolve();
+                    };
+                    tx.onerror = () => { hideProgressScreen(); resolve(); };
+                } catch(e) { hideProgressScreen(); resolve(); }
+            });
+        }
+
+        window.onload = async () => { await initDB(); await loadStateFromDB(); };
+
+        // FONDO
+        function applyBackground(blob) { document.body.style.backgroundImage = `url('${URL.createObjectURL(blob)}')`; }
+        bgInput.addEventListener('change', (e) => {
+            if(e.target.files[0]) { customBgBlob = e.target.files[0]; applyBackground(customBgBlob); }
+        });
+        clearBgBtn.addEventListener('click', () => { customBgBlob = null; document.body.style.backgroundImage = 'none'; bgInput.value = ''; });
+
+        // MÚSICA
+        function applyMusic(blob) {
+            globalAudioPlayer.src = URL.createObjectURL(blob);
+            toggleMusicBtn.style.display = 'flex';
+        }
+        musicInput.addEventListener('change', (e) => {
+            if(e.target.files[0]) { customMusicBlob = e.target.files[0]; applyMusic(customMusicBlob); }
+        });
+        clearMusicBtn.addEventListener('click', () => { 
+            customMusicBlob = null; globalAudioPlayer.src = ''; toggleMusicBtn.style.display = 'none'; musicInput.value = ''; 
+        });
+        
+        let isPlaying = false;
+        toggleMusicBtn.addEventListener('click', () => {
+            if(isPlaying) { globalAudioPlayer.pause(); toggleMusicBtn.style.background = '#0f172a'; toggleMusicBtn.style.color = '#00ff88'; }
+            else { globalAudioPlayer.play().catch(()=>{}); toggleMusicBtn.style.background = '#00ff88'; toggleMusicBtn.style.color = '#000'; }
+            isPlaying = !isPlaying;
+        });
+
+        // CONTADOR DE PALABRAS
+        countBtn.addEventListener('click', () => {
+            const word = countInput.value.trim().toLowerCase();
+            if(!word) { countResult.style.display = 'none'; return; }
+            
+            let total = 0; let counts = {};
+            const regex = new RegExp(word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+            
+            globalMessages.forEach(m => {
+                const matches = m.content.match(regex);
+                if (matches) {
+                    total += matches.length;
+                    counts[m.sender] = (counts[m.sender] || 0) + matches.length;
+                }
+            });
+            
+            let html = `<div class="text-[var(--sys-blue)] mb-1">TOTAL VECES: ${total}</div>`;
+            for(let sender in counts) {
+                let alias = userAliasMap[sender] || sender;
+                html += `<div>${alias}: <span class="text-white">${counts[sender]}</span></div>`;
+            }
+            countResult.innerHTML = html; countResult.style.display = 'block';
+        });
+
+        purgeBtn.addEventListener('click', () => {
+            if(confirm("¿Estás seguro de borrar la memoria?")) {
+                try { db.transaction('dataStore', 'readwrite').objectStore('dataStore').clear().onsuccess = () => location.reload(); } catch(e) { location.reload(); }
+            }
+        });
+
+        toggleSettingsBtn.addEventListener('click', () => document.getElementById('settingsModal').style.display = 'flex');
+        closeModalBtn.addEventListener('click', () => document.getElementById('settingsModal').style.display = 'none');
+        addMoreBtn.addEventListener('click', () => document.getElementById('filesInput').click());
+
+        // ==========================================
+        // EXTRACCIÓN Y PROCESAMIENTO
+        // ==========================================
+        filesInput.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files); if (files.length === 0) return;
+            showProgressScreen("EXTRAYENDO", "Descomprimiendo archivos...");
+            try {
+                let textLogs = [];
+                for (let f = 0; f < files.length; f++) {
+                    let file = files[f];
+                    if (file.name.endsWith('.zip')) {
+                        const zip = await JSZip.loadAsync(file); const fNames = Object.keys(zip.files);
+                        for (let i = 0; i < fNames.length; i++) {
+                            const fn = fNames[i]; const fd = zip.files[fn]; if (fd.dir) continue;
+                            if (fn.endsWith('.txt')) textLogs.push(await fd.async("string"));
+                            else { const blob = await fd.async("blob"); globalMediaFiles[fn] = { url: URL.createObjectURL(blob), blob: blob }; }
+                            if (i % 10 === 0) { updateProgress(Math.floor((i / fNames.length) * 100)); await new Promise(r => setTimeout(r, 0)); }
+                        }
+                    } else if (file.name.endsWith('.txt')) { textLogs.push(await file.text()); } 
+                    else { globalMediaFiles[file.name] = { url: URL.createObjectURL(file), blob: file }; }
+                }
+                await processRawTexts(textLogs);
+            } catch (err) { alert("ERROR: " + err.message); hideProgressScreen(); }
+            filesInput.value = ""; 
+        });
+
+        function parseWhatsAppDate(d, t) {
+            try {
+                let cDate = d.replace(/[^\d\/\-\.]/g, ''); let cTime = t.replace(/[^\d:APM]/gi, '').toUpperCase();
+                let p = cDate.split(/[\/\-\.]/); let dy = parseInt(p[0]), mo = parseInt(p[1])-1, yr = parseInt(p[2]);
+                if (dy <= 12 && parseInt(p[1]) > 12) { dy = parseInt(p[1]); mo = parseInt(p[0])-1; }
+                if (yr < 100) yr += 2000;
+                let h = parseInt(cTime.split(':')[0]), m = parseInt(cTime.split(':')[1]);
+                if (cTime.includes('P') && h < 12) h += 12; if (cTime.includes('A') && h === 12) h = 0;
+                return new Date(yr, mo, dy, h, m);
+            } catch (e) { return new Date(0); }
+        }
+
+        async function processRawTexts(textLogsArray) {
+            if (textLogsArray.length === 0) {
+                await saveStateToDB(); hideProgressScreen(); return;
+            }
+            showProgressScreen("SINTETIZANDO", "Analizando mensajes y emociones...");
+            const msgRegex = /^\[?(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})[, ]+(\d{1,2}:\d{2}(?::\d{2})?\s*[a-zA-Z\.]{0,4})\]?\s*[\-]?\s*([^:]+):\s*(.*)/;
+            let sigs = new Set(); globalMessages.forEach(m => sigs.add(`${m.displayDate}_${m.sender}_${m.content}`));
+
+            let tLines = textLogsArray.reduce((acc, l) => acc + l.split('\n').length, 0); let pLines = 0;
+            for (let log of textLogsArray) {
+                let cur = null; const lines = log.split('\n');
+                for (let i = 0; i < lines.length; i++) {
+                    const m = lines[i].match(msgRegex);
+                    if (m) {
+                        detectedSenders.add(m[3].trim());
+                        cur = { dateObj: parseWhatsAppDate(m[1], m[2]), displayDate: `${m[1]} ${m[2]}`, sender: m[3].trim(), content: m[4].trim() };
+                        const s = `${cur.displayDate}_${cur.sender}_${cur.content}`;
+                        if (!sigs.has(s)) { sigs.add(s); globalMessages.push(cur); }
+                    } else if (lines[i].trim() && cur) {
+                        sigs.delete(`${cur.displayDate}_${cur.sender}_${cur.content}`);
+                        cur.content += "\n" + lines[i].trim();
+                        sigs.add(`${cur.displayDate}_${cur.sender}_${cur.content}`);
+                    }
+                    pLines++;
+                    if (pLines % 2000 === 0) { updateProgress(Math.floor((pLines/tLines)*100)); await new Promise(r => setTimeout(r, 0)); }
+                }
+            }
+            globalMessages.sort((a, b) => a.dateObj - b.dateObj); buildIdentityMatrixUI();
+            showProgressScreen("GUARDANDO", "Asegurando persistencia..."); updateProgress(50);
+            await saveStateToDB(); updateProgress(100);
+            loaderUI.style.display = 'none'; chatUI.style.display = 'block';
+            toggleSettingsBtn.style.display = 'flex'; addMoreBtn.style.display = 'flex';
+            fullscreenBtn.style.display = 'flex';
+            await renderChat(); 
+        }
+
+        function buildIdentityMatrixUI() {
+            identityMatrix.innerHTML = ''; 
+            Array.from(detectedSenders).forEach((sender, index) => {
+                let defaultAlign = userAlignmentMap[sender] || ((sender.toLowerCase() === 'yo' || index === 0) ? 'right' : 'left');
+                userAlignmentMap[sender] = defaultAlign; let currentAlias = userAliasMap[sender] || '';
+                const safeSender = sender.replace(/"/g, '&quot;');
+                const row = document.createElement('div'); row.className = 'identity-row';
+                row.innerHTML = `
+                    <div class="text-[10px] font-sys text-gray-300 truncate" title="${sender}">${sender}</div>
+                    <div><input type="text" class="sys-input py-1 px-2 rounded text-[10px] alias-input" data-user="${safeSender}" placeholder="Alias..." value="${currentAlias}"></div>
+                    <div class="radio-group">
+                        <label><input type="radio" name="align_${index}" value="left" class="radio-input align-trigger" data-user="${safeSender}" ${defaultAlign === 'left' ? 'checked' : ''}><span class="radio-label left-side">IZQ</span></label>
+                        <label><input type="radio" name="align_${index}" value="right" class="radio-input align-trigger" data-user="${safeSender}" ${defaultAlign === 'right' ? 'checked' : ''}><span class="radio-label right-side">DER</span></label>
+                    </div>`;
+                identityMatrix.appendChild(row);
+            });
+        }
+
+        applyMappingBtn.addEventListener('click', async () => {
+            document.querySelectorAll('.alias-input').forEach(input => {
+                const user = input.getAttribute('data-user'); const val = input.value.trim();
+                if (val) userAliasMap[user] = val; else delete userAliasMap[user];
+            });
+            document.querySelectorAll('.align-trigger:checked').forEach(radio => {
+                userAlignmentMap[radio.getAttribute('data-user')] = radio.value;
+            });
+            settingsModal.style.display = 'none'; showProgressScreen("APLICANDO", "Guardando ajustes...");
+            updateProgress(50); await saveStateToDB(); await renderChat(); 
+        });
+
+        // ==========================================
+        // RENDERIZADO CON VFX ENGINE (V22)
+        // ==========================================
+        async function renderChat() {
+            showProgressScreen("CONSTRUYENDO", "Inyectando Efectos Visuales...");
+            messagesDiv.innerHTML = ''; let lastDate = ""; const frag = document.createDocumentFragment();
+            jumpDateSelect.innerHTML = '<option value="">[ SELECCIONAR FECHA ]</option>';
+            const totalMsgs = globalMessages.length;
+
+            for (let i = 0; i < totalMsgs; i++) {
+                const msg = globalMessages[i];
+                const isoDate = msg.dateObj.toISOString().split('T')[0]; 
+                const displayDate = msg.dateObj.toLocaleDateString();
+                
+                if (displayDate !== lastDate && displayDate !== "Invalid Date") {
+                    const dDiv = document.createElement('div'); dDiv.className = "date-divider filter-item"; dDiv.setAttribute('data-isodata', isoDate);
+                    dDiv.innerHTML = `<span>${displayDate}</span>`; frag.appendChild(dDiv); lastDate = displayDate;
+                    const opt = document.createElement('option'); opt.value = isoDate; opt.text = displayDate; jumpDateSelect.appendChild(opt);
+                }
+
+                const isRight = (userAlignmentMap[msg.sender] || 'left') === 'right';
+                const displayName = userAliasMap[msg.sender] || msg.sender; 
+                let finalContent = processMediaContent(msg.content).replace(/\n/g, '<br>');
+                
+                let msgType = 'text';
+                if (finalContent.includes('class="sticker-file"')) msgType = 'sticker';
+                else if (finalContent.includes('<img')) msgType = 'photo';
+                else if (finalContent.includes('<video')) msgType = 'video';
+                else if (finalContent.includes('<audio')) msgType = 'audio';
+
+                // --- EVALUACIÓN DEL DICCIONARIO PARA APLICAR LA CLASE ---
+                let fxClass = '';
+                for (let v of vfxDictionary) {
+                    if (v.regex.test(msg.content)) {
+                        fxClass = v.class;
+                        break; // Toma el primer efecto que coincida (Prioridad en el orden del array)
+                    }
+                }
+
+                const div = document.createElement('div');
+                div.className = `msg-container filter-item ${isRight ? 'msg-right' : 'msg-left'}`;
+                div.setAttribute('data-content', msg.content.toLowerCase()); div.setAttribute('data-isodata', isoDate); div.setAttribute('data-type', msgType);
+
+                div.innerHTML = `
+                    <div class="msg-wrapper ${fxClass}">
+                        <div class="name-label">${displayName}</div>
+                        <div class="text-[0.85rem] leading-relaxed text-gray-200">${finalContent}</div>
+                        <div class="timestamp">${msg.dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                    </div>`;
+                frag.appendChild(div);
+
+                if (i % 800 === 0 || i === totalMsgs - 1) { updateProgress(Math.floor(((i + 1) / totalMsgs) * 100)); await new Promise(r => setTimeout(r, 0)); }
+            }
+            
+            messagesDiv.appendChild(frag); applyFilters();
+            setTimeout(() => { window.scrollTo(0, document.body.scrollHeight); hideProgressScreen(); }, 50);
+        }
+
+        function processMediaContent(t) {
+            let res = t;
+            for (let filename in globalMediaFiles) {
+                const reg = new RegExp(filename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+                if (reg.test(t)) {
+                    const url = globalMediaFiles[filename].url; const ext = filename.split('.').pop().toLowerCase();
+                    const isSticker = ext === 'webp' || filename.toUpperCase().includes('STK');
+                    
+                    if (isSticker) res = res.replace(reg, `<br><img src="${url}" class="sticker-file" loading="lazy">`);
+                    else if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) res = res.replace(reg, `<br><img src="${url}" class="media-file" loading="lazy">`);
+                    else if (['mp4', 'webm'].includes(ext)) res = res.replace(reg, `<br><video controls src="${url}" class="media-file"></video>`);
+                    else if (['opus', 'ogg', 'mp3', 'm4a', 'wav'].includes(ext)) res = res.replace(reg, `<br><audio controls src="${url}" class="media-file mt-1"></audio>`);
+                    else res = res.replace(reg, `<br><a href="${url}" download="${filename}" class="text-[var(--sys-blue)] text-xs font-bold underline mt-1 block">DESCARGAR</a>`);
+                }
+            }
+            return res;
+        }
+
+        function applyFilters() {
+            const term = searchInput.value.toLowerCase().trim(); const fType = filterSelect.value;
+            const sDate = dateStart.value; const eDate = dateEnd.value;     
+            document.querySelectorAll('.filter-item').forEach(el => {
+                const iso = el.getAttribute('data-isodata'); let dateValid = true;
+                if (sDate && iso < sDate) dateValid = false; if (eDate && iso > eDate) dateValid = false;
+                if (el.classList.contains('date-divider')) { el.style.display = dateValid ? 'flex' : 'none'; } else {
+                    const content = el.getAttribute('data-content'); const type = el.getAttribute('data-type');
+                    const matchSearch = content.includes(term); const matchType = fType === 'all' || type === fType;
+                    el.style.display = (dateValid && matchSearch && matchType) ? 'flex' : 'none';
+                }
+            });
+        }
+        
+        searchInput.addEventListener('input', applyFilters); filterSelect.addEventListener('change', applyFilters); dateStart.addEventListener('change', applyFilters); dateEnd.addEventListener('change', applyFilters);
+
+        jumpBtn.addEventListener('click', () => {
+            const target = jumpDateSelect.value; if (!target) return; const el = document.querySelector(`.date-divider[data-isodata="${target}"]`);
+            if (el) {
+                document.getElementById('settingsModal').style.display = 'none'; window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - 65, behavior: "smooth" });
+                el.querySelector('span').style.borderColor = "var(--sys-alert)"; el.querySelector('span').style.color = "var(--sys-alert)";
+                setTimeout(() => { el.querySelector('span').style.borderColor = "#333"; el.querySelector('span').style.color = "#94a3b8"; }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>
