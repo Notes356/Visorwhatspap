@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AETHER // V18_ANTI_CRASH</title>
+    <title>AETHER // V19_NATURAL_SCROLL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -14,17 +14,18 @@
             --solid-panel: #0a0d14; --sys-border: rgba(0, 210, 255, 0.2);
         }
         
+        /* LA MAGIA DE TU SOLUCIÓN: Descongelamos el body y dejamos que fluya naturalmente */
         html, body {
             background-color: var(--bg-void); color: #e2e8f0; font-family: 'Inter', sans-serif;
-            margin: 0; padding: 0; width: 100vw; height: 100vh; height: 100dvh;
-            position: fixed; top: 0; left: 0; overflow: hidden; 
-            overscroll-behavior: none !important; 
-            display: flex; flex-direction: column;
-            background-size: cover; background-position: center;
+            margin: 0; padding: 0; width: 100%; min-height: 100vh;
+            /* El fondo se queda quieto mientras el contenido baja */
+            background-attachment: fixed; background-size: cover; background-position: center;
+            overflow-x: hidden;
+            /* Si llegas al tope real, Android mostrará su recarga, como debe ser */
         }
 
         #bg-overlay { 
-            position: absolute; inset: 0; background: rgba(5,7,10,0.85); z-index: -1; pointer-events: none; 
+            position: fixed; inset: 0; background: rgba(5,7,10,0.85); z-index: -1; pointer-events: none; 
         }
         
         .font-sys { font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; }
@@ -36,7 +37,6 @@
             padding: 6px 14px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.75rem; 
             display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s;
         }
-        .sys-btn:hover { background: var(--sys-blue); color: #000; }
         
         .sys-input, .sys-select {
             background: #000; border: 1px solid #333; border-bottom: 2px solid var(--sys-blue);
@@ -44,8 +44,19 @@
             font-family: 'Inter', sans-serif; font-size: 0.8rem;
         }
 
+        /* HEADER FLOTANTE: Siempre arriba mientras la página baja */
+        header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 50; height: 55px;
+        }
+
+        /* EL CHAT: Ya no tiene scroll interno, empuja la página. Le damos espacio para el header */
+        .main-container {
+            padding-top: 65px; 
+            width: 100%;
+        }
+
         #settingsModal {
-            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95); z-index: 50; 
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95); z-index: 60; 
             display: none; align-items: center; justify-content: center;
         }
         .modal-content {
@@ -61,12 +72,6 @@
         .radio-input:checked + .radio-label.right-side { background: #0a2030; color: var(--sys-blue); }
         .radio-input { display: none; }
 
-        #chatUI { 
-            flex: 1 1 0%; overflow-y: auto; overflow-x: hidden;
-            -webkit-overflow-scrolling: touch; 
-            position: relative;
-        }
-
         .msg-container { margin-bottom: 0.5rem; max-width: 85%; word-wrap: break-word; display: flex; flex-direction: column; }
         .msg-wrapper { padding: 8px 12px; background: #0d121c; border: 1px solid #1f2937; }
         .msg-left { align-items: flex-start; margin-right: auto; }
@@ -79,17 +84,13 @@
         .msg-right .name-label { color: var(--sys-blue); }
         .timestamp { font-size: 0.65rem; color: #64748b; margin-top: 2px; text-align: right; }
 
-        .date-divider { text-align: center; margin: 1rem 0; display: flex; align-items: center; justify-content: center; scroll-margin-top: 60px; }
+        .date-divider { text-align: center; margin: 1rem 0; display: flex; align-items: center; justify-content: center; scroll-margin-top: 70px; }
         .date-divider span { background: #000; border: 1px solid #333; padding: 2px 12px; border-radius: 12px; font-family: 'Rajdhani', sans-serif; font-size: 0.75rem; color: #94a3b8; }
 
         .media-file { max-width: 100%; max-height: 250px; object-fit: contain; border-radius: 4px; margin-top: 4px; background: #000; }
         .sticker-file { max-width: 120px; max-height: 120px; object-fit: contain; margin-top: 2px; }
         
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: var(--sys-blue); }
-
-        .drop-zone { border: 1px dashed var(--sys-blue); background: #0a0d14; border-radius: 8px; }
+        .drop-zone { border: 1px dashed var(--sys-blue); background: #0a0d14; border-radius: 8px; margin: 20px; }
         
         #syncOverlay { 
             position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; 
@@ -127,9 +128,9 @@
         <div class="text-gray-500 text-sm mt-2 font-mono" id="overlaySubtext">Por favor espere...</div>
     </div>
 
-    <header class="px-4 py-3 solid-panel z-30 shrink-0 flex justify-between items-center relative w-full">
+    <header class="px-4 solid-panel shrink-0 flex justify-between items-center w-full">
         <h1 class="text-lg font-bold text-white font-sys flex items-center gap-2">
-            AETHER <span class="text-[var(--sys-blue)] font-normal text-sm opacity-70">| NEXUS V18</span>
+            AETHER <span class="text-[var(--sys-blue)] font-normal text-sm opacity-70">| NEXUS V19</span>
         </h1>
         <div class="flex gap-2">
             <button id="addMoreBtn" class="sys-btn font-sys hidden" style="border-color: #a855f7; color: #a855f7;">+ ARCHIVOS</button>
@@ -175,13 +176,13 @@
         </div>
     </div>
 
-    <div class="flex-1 relative flex flex-col min-h-0 w-full">
+    <div class="main-container">
         <input type="file" id="filesInput" multiple accept=".zip,.txt,image/*,video/*,audio/*,.webp" class="hidden">
         
-        <div id="loaderUI" class="absolute inset-0 flex items-center justify-center p-4 z-10 bg-[#05070a]">
+        <div id="loaderUI" class="flex items-center justify-center p-4 z-10 w-full h-[80vh]">
             <div class="drop-zone solid-panel p-6 text-center w-full max-w-lg cursor-pointer" onclick="document.getElementById('filesInput').click()">
                 <h2 class="text-xl font-sys font-bold text-[var(--sys-blue)] mb-1">SISTEMA INACTIVO</h2>
-                <p class="text-gray-400 text-xs mb-4">Toque aquí para cargar sus archivos.<br>(Los datos se guardarán permanentemente)</p>
+                <p class="text-gray-400 text-xs mb-4">Toque aquí para cargar sus archivos.</p>
             </div>
         </div>
         
@@ -191,40 +192,6 @@
     </div>
 
     <script>
-        // =====================================================================
-        // ESCUDO ANTI-PULL-TO-REFRESH (El Asesino de Recargas de Android)
-        // =====================================================================
-        let touchStartY = 0;
-
-        document.addEventListener('touchstart', function(e) {
-            touchStartY = e.touches[0].pageY;
-        }, { passive: false });
-
-        document.addEventListener('touchmove', function(e) {
-            // Encuentra el elemento que el usuario está tocando
-            const target = e.target;
-            const scrollable = target.closest('#chatUI') || target.closest('.overflow-y-auto');
-            
-            // Si no está tocando nada que se pueda scrollear (ej: la barra de arriba o el fondo oscuro), bloquea el movimiento.
-            if (!scrollable) {
-                e.preventDefault();
-                return;
-            }
-
-            const touchY = e.touches[0].pageY;
-            const isSwipingDown = touchY > touchStartY; // El dedo baja, el contenido sube
-            const isAtTop = scrollable.scrollTop <= 1; // ¿Está en el tope superior?
-
-            // Si está en el tope y el usuario intenta bajar el dedo, Android querrá recargar. ¡MATA EL EVENTO!
-            if (isAtTop && isSwipingDown) {
-                e.preventDefault();
-            }
-        }, { passive: false });
-
-
-        // =====================================================================
-        // RESTO DE LA LÓGICA DE LA APP (Base de Datos, Interfaz, etc)
-        // =====================================================================
         const filesInput = document.getElementById('filesInput');
         const loaderUI = document.getElementById('loaderUI');
         const chatUI = document.getElementById('chatUI');
@@ -586,8 +553,9 @@
             messagesDiv.appendChild(fragment); 
             applyFilters();
             
+            // EL CAMBIO DE SCROLL: Ahora usamos window.scrollTo para mover la página entera
             setTimeout(() => {
-                chatUI.scrollTop = chatUI.scrollHeight; 
+                window.scrollTo(0, document.body.scrollHeight);
                 hideProgressScreen();
             }, 100);
         }
@@ -597,7 +565,17 @@
             if (!targetDate) return;
             const targetElement = document.querySelector(`.date-divider[data-isodata="${targetDate}"]`);
             if (targetElement) {
-                toggleModal(); targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                toggleModal(); 
+                // Aseguramos que el salto tenga en cuenta el espacio del header flotante
+                const headerOffset = 65;
+                const elementPosition = targetElement.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: "smooth"
+                });
+
                 targetElement.querySelector('span').style.borderColor = "var(--sys-alert)";
                 targetElement.querySelector('span').style.color = "var(--sys-alert)";
                 setTimeout(() => {
