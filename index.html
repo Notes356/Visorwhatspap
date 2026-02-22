@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AETHER // V14_PERSISTENT_CORE</title>
+    <title>AETHER // V15_NEXUS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -14,11 +14,10 @@
             --solid-panel: #0a0d14; --sys-border: rgba(0, 210, 255, 0.2);
         }
         
-        /* FIX DEFINITIVO DE SCROLL: Bloqueo absoluto a los bordes de la pantalla */
         html, body {
             background-color: var(--bg-void); color: #e2e8f0; font-family: 'Inter', sans-serif;
             margin: 0; padding: 0; width: 100vw; height: 100vh; height: 100dvh;
-            position: fixed; top: 0; left: 0; overflow: hidden; /* CERO scroll en el fondo */
+            position: fixed; top: 0; left: 0; overflow: hidden; 
             display: flex; flex-direction: column;
             background-size: cover; background-position: center;
         }
@@ -34,8 +33,6 @@
             display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s;
         }
         .sys-btn:hover { background: var(--sys-blue); color: #000; }
-        .export-btn { border-color: #00ff88; color: #00ff88; }
-        .export-btn:hover { background: #00ff88; color: #000; }
         
         .sys-input, .sys-select {
             background: #000; border: 1px solid #333; border-bottom: 2px solid var(--sys-blue);
@@ -85,9 +82,7 @@
         .drop-zone { border: 1px dashed var(--sys-blue); background: #0a0d14; border-radius: 8px; }
         #syncOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; }
         
-        #chatUI {
-            flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; /* Scroll suave nativo en apps */
-        }
+        #chatUI { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     </style>
 </head>
 <body>
@@ -95,15 +90,15 @@
     <div id="bg-overlay"></div>
     <div id="syncOverlay">
         <div class="font-sys text-[var(--sys-blue)] text-2xl font-bold" id="overlayText">INICIALIZANDO...</div>
-        <div class="text-gray-500 text-sm mt-2 font-mono" id="overlaySubtext">Cargando base de datos.</div>
+        <div class="text-gray-500 text-sm mt-2 font-mono" id="overlaySubtext">Por favor espere.</div>
     </div>
 
     <header class="px-4 py-3 solid-panel z-30 shrink-0 flex justify-between items-center relative w-full">
         <h1 class="text-lg font-bold text-white font-sys flex items-center gap-2">
-            AETHER <span class="text-[var(--sys-blue)] font-normal text-sm opacity-70">| APK_CORE</span>
+            AETHER <span class="text-[var(--sys-blue)] font-normal text-sm opacity-70">| APK_V15</span>
         </h1>
         <div class="flex gap-2">
-            <button id="addMoreBtn" class="sys-btn font-sys hidden" style="border-color: #a855f7; color: #a855f7;">+ AÑADIR DATOS</button>
+            <button id="addMoreBtn" class="sys-btn font-sys hidden" style="border-color: #a855f7; color: #a855f7;">+ ARCHIVOS</button>
             <button id="toggleSettingsBtn" class="sys-btn font-sys hidden">AJUSTES</button>
         </div>
     </header>
@@ -120,25 +115,16 @@
                     
                     <div class="bg-[#05070a] p-3 border border-[#333] border-l-2 border-l-[var(--sys-alert)]">
                         <h3 class="text-xs font-sys text-[var(--sys-alert)] mb-1 font-bold">SALTO TEMPORAL</h3>
-                        <select id="jumpDateSelect" class="sys-select py-1.5 mb-2">
-                            <option value="">[ SELECCIONA UNA FECHA ]</option>
-                        </select>
+                        <select id="jumpDateSelect" class="sys-select py-1.5 mb-2"><option value="">[ SELECCIONA UNA FECHA ]</option></select>
                         <button id="jumpBtn" class="sys-btn w-full" style="border-color: var(--sys-alert); color: var(--sys-alert);">SALTAR A FECHA</button>
                     </div>
 
                     <div class="flex flex-col gap-2 bg-[#05070a] p-3 border border-[#333]">
                         <h3 class="text-xs font-sys text-[var(--sys-blue)] mb-1">FILTROS</h3>
                         <input type="text" id="searchInput" placeholder="Buscar texto..." class="sys-input py-1.5">
-                        <select id="filterSelect" class="sys-select py-1.5">
-                            <option value="all">TODOS</option>
-                            <option value="photo">IMÁGENES</option>
-                            <option value="sticker">STICKERS</option>
-                            <option value="video">VIDEOS</option>
-                            <option value="audio">AUDIOS</option>
-                        </select>
                     </div>
 
-                    <button id="purgeBtn" class="sys-btn w-full mt-auto" style="border-color: red; color: red; background: rgba(255,0,0,0.1);">⚠️ PURGAR SISTEMA (BORRAR TODO)</button>
+                    <button id="purgeBtn" class="sys-btn w-full mt-auto" style="border-color: red; color: red; background: rgba(255,0,0,0.1);">⚠️ BORRAR MEMORIA</button>
                 </div>
 
                 <div class="w-full md:w-2/3 flex flex-col">
@@ -148,7 +134,7 @@
             </div>
 
             <div class="p-3 border-t border-[#333] flex justify-end bg-[#05070a]">
-                <button id="applyMappingBtn" class="sys-btn font-sys">GUARDAR CAMBIOS</button>
+                <button id="applyMappingBtn" class="sys-btn font-sys">APLICAR CAMBIOS</button>
             </div>
         </div>
     </div>
@@ -158,9 +144,8 @@
         
         <div id="loaderUI" class="absolute inset-0 flex items-center justify-center p-4 z-10 bg-[#05070a]">
             <div class="drop-zone solid-panel p-6 text-center w-full max-w-lg cursor-pointer" onclick="document.getElementById('filesInput').click()">
-                <h2 class="text-xl font-sys font-bold text-[var(--sys-blue)] mb-1">BASE DE DATOS VACÍA</h2>
-                <p class="text-gray-400 text-xs mb-4">Toque aquí para seleccionar archivos.<br>Los archivos se irán sumando a la memoria.</p>
-                <div id="statusText" class="hidden text-sm font-sys font-bold text-[#00ff88]">PROCESANDO...</div>
+                <h2 class="text-xl font-sys font-bold text-[var(--sys-blue)] mb-1">SISTEMA INACTIVO</h2>
+                <p class="text-gray-400 text-xs mb-4">Toque aquí para cargar sus archivos.<br>(Si es Android, hágalo de a uno o use un ZIP)</p>
             </div>
         </div>
         
@@ -170,12 +155,10 @@
     </div>
 
     <script>
-        // REFERENCIAS DOM
         const filesInput = document.getElementById('filesInput');
         const loaderUI = document.getElementById('loaderUI');
         const chatUI = document.getElementById('chatUI');
         const messagesDiv = document.getElementById('messagesDiv');
-        const statusText = document.getElementById('statusText');
         const overlayText = document.getElementById('overlayText');
         const overlaySubtext = document.getElementById('overlaySubtext');
         
@@ -187,23 +170,21 @@
         const purgeBtn = document.getElementById('purgeBtn');
         
         const searchInput = document.getElementById('searchInput');
-        const filterSelect = document.getElementById('filterSelect');
         const identityMatrix = document.getElementById('identityMatrix');
         const applyMappingBtn = document.getElementById('applyMappingBtn');
         const jumpDateSelect = document.getElementById('jumpDateSelect');
         const jumpBtn = document.getElementById('jumpBtn');
 
-        // ESTADO GLOBAL
-        let globalMediaFiles = {}; // { "foto.jpg": { blob: Blob, url: "blob:..." } }
+        let globalMediaFiles = {}; 
         let globalMessages = []; 
         let detectedSenders = new Set();
         let userAlignmentMap = {}; 
         let userAliasMap = {};     
 
         // ==========================================
-        // MOTOR DE BASE DE DATOS (IndexedDB)
+        // SISTEMA DE BASE DE DATOS ANTI-CRASH
         // ==========================================
-        const DB_NAME = "AetherDB";
+        const DB_NAME = "AetherDB_V2";
         let db;
 
         function initDB() {
@@ -211,117 +192,105 @@
                 const request = indexedDB.open(DB_NAME, 1);
                 request.onupgradeneeded = (e) => {
                     db = e.target.result;
-                    if (!db.objectStoreNames.contains('dataStore')) {
-                        db.createObjectStore('dataStore');
-                    }
+                    if (!db.objectStoreNames.contains('dataStore')) db.createObjectStore('dataStore');
                 };
                 request.onsuccess = (e) => { db = e.target.result; resolve(); };
-                request.onerror = (e) => reject("Error abriendo DB");
+                request.onerror = (e) => { console.error("Error DB", e); resolve(); }; // Resuelve para no congelar
             });
         }
 
         async function saveStateToDB() {
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction('dataStore', 'readwrite');
-                const store = tx.objectStore('dataStore');
-                
-                // Guardar sin las URLs temporales (porque las URLs mueren al cerrar la app)
-                let mediaToSave = {};
-                for(let key in globalMediaFiles) {
-                    mediaToSave[key] = { blob: globalMediaFiles[key].blob };
-                }
+            return new Promise((resolve) => {
+                try {
+                    const tx = db.transaction('dataStore', 'readwrite');
+                    const store = tx.objectStore('dataStore');
+                    
+                    let mediaToSave = {};
+                    for(let key in globalMediaFiles) {
+                        mediaToSave[key] = { blob: globalMediaFiles[key].blob };
+                    }
 
-                store.put(globalMessages, 'messages');
-                store.put(mediaToSave, 'media');
-                store.put(Array.from(detectedSenders), 'senders');
-                store.put({ userAlignmentMap, userAliasMap }, 'config');
-                
-                tx.oncomplete = () => resolve();
-                tx.onerror = () => reject();
+                    store.put(globalMessages, 'messages');
+                    store.put(mediaToSave, 'media');
+                    store.put(Array.from(detectedSenders), 'senders');
+                    store.put({ userAlignmentMap, userAliasMap }, 'config');
+                    
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = (e) => {
+                        console.error("Android bloqueó el guardado por el tamaño.");
+                        resolve(); // EVITA EL CONGELAMIENTO
+                    };
+                    tx.onabort = () => resolve();
+                } catch(e) { resolve(); }
             });
         }
 
         async function loadStateFromDB() {
-            syncOverlay.style.display = 'flex';
-            overlayText.innerText = "RESTAURANDO SESIÓN...";
+            syncOverlay.style.display = 'flex'; overlayText.innerText = "LEYENDO MEMORIA...";
             
             return new Promise((resolve) => {
-                const tx = db.transaction('dataStore', 'readonly');
-                const store = tx.objectStore('dataStore');
-                let loadedMsgs = null, loadedMedia = null, loadedSenders = null, loadedConfig = null;
+                try {
+                    const tx = db.transaction('dataStore', 'readonly');
+                    const store = tx.objectStore('dataStore');
+                    let loadedMsgs = null, loadedMedia = null, loadedSenders = null, loadedConfig = null;
 
-                store.get('messages').onsuccess = (e) => loadedMsgs = e.target.result;
-                store.get('media').onsuccess = (e) => loadedMedia = e.target.result;
-                store.get('senders').onsuccess = (e) => loadedSenders = e.target.result;
-                store.get('config').onsuccess = (e) => {
-                    loadedConfig = e.target.result;
-                    
-                    if (loadedMsgs && loadedMsgs.length > 0) {
-                        globalMessages = loadedMsgs;
-                        detectedSenders = new Set(loadedSenders || []);
-                        if(loadedConfig) {
-                            userAlignmentMap = loadedConfig.userAlignmentMap || {};
-                            userAliasMap = loadedConfig.userAliasMap || {};
-                        }
-                        
-                        // Regenerar URLs para los Blobs guardados
-                        globalMediaFiles = {};
-                        if(loadedMedia) {
-                            for(let key in loadedMedia) {
-                                globalMediaFiles[key] = {
-                                    blob: loadedMedia[key].blob,
-                                    url: URL.createObjectURL(loadedMedia[key].blob)
-                                };
+                    store.get('messages').onsuccess = (e) => loadedMsgs = e.target.result;
+                    store.get('media').onsuccess = (e) => loadedMedia = e.target.result;
+                    store.get('senders').onsuccess = (e) => loadedSenders = e.target.result;
+                    store.get('config').onsuccess = (e) => loadedConfig = e.target.result;
+
+                    tx.oncomplete = () => {
+                        if (loadedMsgs && loadedMsgs.length > 0) {
+                            globalMessages = loadedMsgs;
+                            detectedSenders = new Set(loadedSenders || []);
+                            if(loadedConfig) {
+                                userAlignmentMap = loadedConfig.userAlignmentMap || {};
+                                userAliasMap = loadedConfig.userAliasMap || {};
                             }
+                            
+                            globalMediaFiles = {};
+                            if(loadedMedia) {
+                                for(let key in loadedMedia) {
+                                    try {
+                                        globalMediaFiles[key] = { blob: loadedMedia[key].blob, url: URL.createObjectURL(loadedMedia[key].blob) };
+                                    } catch(err) {}
+                                }
+                            }
+                            
+                            buildIdentityMatrixUI();
+                            loaderUI.style.display = 'none'; chatUI.style.display = 'block';
+                            toggleSettingsBtn.style.display = 'flex'; addMoreBtn.style.display = 'flex';
+                            renderChat();
                         }
-                        
-                        buildIdentityMatrixUI();
-                        loaderUI.style.display = 'none'; 
-                        chatUI.style.display = 'block';
-                        toggleSettingsBtn.style.display = 'flex'; 
-                        addMoreBtn.style.display = 'flex';
-                        renderChat();
-                    }
-                    syncOverlay.style.display = 'none';
-                    resolve();
-                };
+                        syncOverlay.style.display = 'none';
+                        resolve();
+                    };
+                    tx.onerror = () => { syncOverlay.style.display = 'none'; resolve(); };
+                } catch(e) { syncOverlay.style.display = 'none'; resolve(); }
             });
         }
 
-        // Inicializar DB al abrir la app
-        window.onload = async () => {
-            await initDB();
-            await loadStateFromDB();
-        };
+        window.onload = async () => { await initDB(); await loadStateFromDB(); };
 
-        // Purga de Base de Datos
         purgeBtn.addEventListener('click', () => {
-            if(confirm("¿Estás seguro de borrar todo el historial guardado en esta aplicación?")) {
-                const tx = db.transaction('dataStore', 'readwrite');
-                tx.objectStore('dataStore').clear();
-                tx.oncomplete = () => location.reload();
+            if(confirm("¿Seguro que quieres borrar la memoria del chat?")) {
+                try {
+                    const tx = db.transaction('dataStore', 'readwrite');
+                    tx.objectStore('dataStore').clear();
+                    tx.oncomplete = () => location.reload();
+                } catch(e) { location.reload(); }
             }
         });
 
-        // ==========================================
-        // INTERFAZ Y NAVEGACIÓN
-        // ==========================================
         function toggleModal() { settingsModal.style.display = settingsModal.style.display === 'flex' ? 'none' : 'flex'; }
         toggleSettingsBtn.addEventListener('click', toggleModal);
         closeModalBtn.addEventListener('click', toggleModal);
-        
-        // Botón superior para añadir más archivos si el visor de Android te bloqueó seleccionar varios
         addMoreBtn.addEventListener('click', () => document.getElementById('filesInput').click());
 
-        // ==========================================
-        // INGESTA ACUMULATIVA (Fuerza Bruta)
-        // ==========================================
         filesInput.addEventListener('change', async (e) => {
             const files = Array.from(e.target.files); if (files.length === 0) return;
             
-            syncOverlay.style.display = 'flex';
-            overlayText.innerText = "EXTRAYENDO...";
-            overlaySubtext.innerText = "Combinando archivos nuevos con la memoria.";
+            syncOverlay.style.display = 'flex'; overlayText.innerText = "EXTRAYENDO...";
             
             try {
                 let textLogs = [];
@@ -331,7 +300,6 @@
                         for (let i = 0; i < fileNames.length; i++) {
                             const filename = fileNames[i]; const fileData = zip.files[filename];
                             if (fileData.dir) continue;
-                            
                             if (filename.endsWith('.txt')) textLogs.push(await fileData.async("string"));
                             else {
                                 const blob = await fileData.async("blob");
@@ -341,15 +309,9 @@
                     } else if (file.name.endsWith('.txt')) textLogs.push(await file.text());
                     else globalMediaFiles[file.name] = { url: URL.createObjectURL(file), blob: file };
                 }
-                
-                if (textLogs.length === 0 && files.some(f => f.name.endsWith('.txt') || f.name.endsWith('.zip')) == false) {
-                     // Solo subieron fotos nuevas (Ej: seleccionaron de a una). No hay error.
-                }
-                
                 setTimeout(() => processRawTexts(textLogs), 50);
             } catch (err) { alert("ERROR: " + err.message); syncOverlay.style.display = 'none'; }
-            
-            filesInput.value = ""; // Limpiar input para permitir seleccionar el mismo archivo de nuevo si se equivocan
+            filesInput.value = ""; 
         });
 
         function parseWhatsAppDate(dateStr, timeStr) {
@@ -365,10 +327,9 @@
         }
 
         async function processRawTexts(textLogsArray) {
-            overlayText.innerText = "SINTETIZANDO...";
+            overlayText.innerText = "ORDENANDO DATOS...";
             const msgRegex = /^\[?(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})[, ]+(\d{1,2}:\d{2}(?::\d{2})?\s*(?:[a-zA-Z\.]{1,4})?)\]?\s*[\-]?\s*([^:]+):\s*(.*)/;
             
-            // Reconstruimos las firmas únicas para no duplicar mensajes si cargan el mismo archivo dos veces
             let uniqueSignatures = new Set();
             globalMessages.forEach(m => uniqueSignatures.add(`${m.displayDate}_${m.sender}_${m.content}`));
 
@@ -393,14 +354,12 @@
             globalMessages.sort((a, b) => a.dateObj - b.dateObj);
             buildIdentityMatrixUI();
             
-            // Guardar en Base de Datos de forma asíncrona
-            overlayText.innerText = "GUARDANDO EN MEMORIA...";
+            overlayText.innerText = "GUARDANDO...";
             await saveStateToDB();
             
             loaderUI.style.display = 'none'; chatUI.style.display = 'block';
             toggleSettingsBtn.style.display = 'flex'; addMoreBtn.style.display = 'flex';
             syncOverlay.style.display = 'none';
-            
             renderChat(); 
         }
 
@@ -433,9 +392,9 @@
                 userAlignmentMap[radio.getAttribute('data-user')] = radio.value;
             });
 
-            settingsModal.style.display = 'none'; syncOverlay.style.display = 'flex'; overlayText.innerText = "APLICANDO CAMBIOS...";
+            settingsModal.style.display = 'none'; syncOverlay.style.display = 'flex'; overlayText.innerText = "APLICANDO...";
             
-            await saveStateToDB(); // Guarda la nueva config
+            await saveStateToDB(); 
             setTimeout(() => { renderChat(); syncOverlay.style.display = 'none'; }, 50); 
         });
 
@@ -514,21 +473,14 @@
 
         function applyFilters() {
             const searchTerm = searchInput.value.toLowerCase().trim();
-            const startD = dateStart.value; const endD = dateEnd.value;     
-
             document.querySelectorAll('.filter-item').forEach(el => {
-                const isoDate = el.getAttribute('data-isodata'); let dateValid = true;
-                if (startD && isoDate < startD) dateValid = false; if (endD && isoDate > endD) dateValid = false;
-
-                if (el.classList.contains('date-divider')) el.style.display = dateValid ? 'flex' : 'none';
-                else {
+                if (!el.classList.contains('date-divider')) {
                     const content = el.getAttribute('data-content');
-                    const matchesSearch = content.includes(searchTerm);
-                    el.style.display = (dateValid && matchesSearch) ? 'flex' : 'none';
+                    el.style.display = content.includes(searchTerm) ? 'flex' : 'none';
                 }
             });
         }
-        searchInput.addEventListener('input', applyFilters); dateStart.addEventListener('change', applyFilters); dateEnd.addEventListener('change', applyFilters);
+        searchInput.addEventListener('input', applyFilters);
 
     </script>
 </body>
