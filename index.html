@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AETHER // V17_NEXUS</title>
+    <title>AETHER // V18_ANTI_CRASH</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -14,13 +14,11 @@
             --solid-panel: #0a0d14; --sys-border: rgba(0, 210, 255, 0.2);
         }
         
-        /* FIX DE SCROLL: Aislamiento absoluto del navegador */
         html, body {
             background-color: var(--bg-void); color: #e2e8f0; font-family: 'Inter', sans-serif;
             margin: 0; padding: 0; width: 100vw; height: 100vh; height: 100dvh;
             position: fixed; top: 0; left: 0; overflow: hidden; 
-            overscroll-behavior: none !important; /* Destruye el pull-to-refresh */
-            touch-action: none; /* Evita que el fondo intercepte gestos */
+            overscroll-behavior: none !important; 
             display: flex; flex-direction: column;
             background-size: cover; background-position: center;
         }
@@ -63,12 +61,9 @@
         .radio-input:checked + .radio-label.right-side { background: #0a2030; color: var(--sys-blue); }
         .radio-input { display: none; }
 
-        /* CHAT UI AISLADO: Aquí se permite el scroll, pero no se escapa al body */
         #chatUI { 
             flex: 1 1 0%; overflow-y: auto; overflow-x: hidden;
             -webkit-overflow-scrolling: touch; 
-            overscroll-behavior-y: contain !important;
-            touch-action: pan-y; /* Solo permite deslizar arriba y abajo */
             position: relative;
         }
 
@@ -101,7 +96,6 @@
             display: none; flex-direction: column; align-items: center; justify-content: center; 
         }
 
-        /* BARRA DE PROGRESO PIXEL ART */
         .pixel-bar-container {
             width: 80%; max-width: 300px; padding: 4px; background: #000;
             border: 2px solid var(--sys-blue); box-shadow: 4px 4px 0 rgba(0, 210, 255, 0.2);
@@ -135,7 +129,7 @@
 
     <header class="px-4 py-3 solid-panel z-30 shrink-0 flex justify-between items-center relative w-full">
         <h1 class="text-lg font-bold text-white font-sys flex items-center gap-2">
-            AETHER <span class="text-[var(--sys-blue)] font-normal text-sm opacity-70">| NEXUS V17</span>
+            AETHER <span class="text-[var(--sys-blue)] font-normal text-sm opacity-70">| NEXUS V18</span>
         </h1>
         <div class="flex gap-2">
             <button id="addMoreBtn" class="sys-btn font-sys hidden" style="border-color: #a855f7; color: #a855f7;">+ ARCHIVOS</button>
@@ -197,7 +191,40 @@
     </div>
 
     <script>
-        // REFERENCIAS DOM
+        // =====================================================================
+        // ESCUDO ANTI-PULL-TO-REFRESH (El Asesino de Recargas de Android)
+        // =====================================================================
+        let touchStartY = 0;
+
+        document.addEventListener('touchstart', function(e) {
+            touchStartY = e.touches[0].pageY;
+        }, { passive: false });
+
+        document.addEventListener('touchmove', function(e) {
+            // Encuentra el elemento que el usuario está tocando
+            const target = e.target;
+            const scrollable = target.closest('#chatUI') || target.closest('.overflow-y-auto');
+            
+            // Si no está tocando nada que se pueda scrollear (ej: la barra de arriba o el fondo oscuro), bloquea el movimiento.
+            if (!scrollable) {
+                e.preventDefault();
+                return;
+            }
+
+            const touchY = e.touches[0].pageY;
+            const isSwipingDown = touchY > touchStartY; // El dedo baja, el contenido sube
+            const isAtTop = scrollable.scrollTop <= 1; // ¿Está en el tope superior?
+
+            // Si está en el tope y el usuario intenta bajar el dedo, Android querrá recargar. ¡MATA EL EVENTO!
+            if (isAtTop && isSwipingDown) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+
+        // =====================================================================
+        // RESTO DE LA LÓGICA DE LA APP (Base de Datos, Interfaz, etc)
+        // =====================================================================
         const filesInput = document.getElementById('filesInput');
         const loaderUI = document.getElementById('loaderUI');
         const chatUI = document.getElementById('chatUI');
@@ -222,14 +249,12 @@
         const jumpDateSelect = document.getElementById('jumpDateSelect');
         const jumpBtn = document.getElementById('jumpBtn');
 
-        // ESTADO GLOBAL
         let globalMediaFiles = {}; 
         let globalMessages = []; 
         let detectedSenders = new Set();
         let userAlignmentMap = {}; 
         let userAliasMap = {};     
 
-        // CONTROL DE BARRA DE PROGRESO
         function showProgressScreen(title, subtitle) {
             syncOverlay.style.display = 'flex';
             overlayText.innerText = title;
@@ -248,9 +273,6 @@
             pixelBarContainer.style.display = 'none';
         }
 
-        // ==========================================
-        // MOTOR DE BASE DE DATOS (IndexedDB)
-        // ==========================================
         const DB_NAME = "AetherDB_V2";
         let db;
 
@@ -292,7 +314,6 @@
         }
 
         async function loadStateFromDB() {
-            // Utilizamos la pantalla con porcentaje, aunque la lectura sea rápida
             showProgressScreen("CONECTANDO...", "Cargando base de datos guardada");
             updateProgress(20);
             
@@ -333,7 +354,6 @@
                             toggleSettingsBtn.style.display = 'flex'; 
                             addMoreBtn.style.display = 'flex';
                             
-                            // Ceder el control a renderChat que tiene su propia barra de progreso
                             await renderChat();
                         } else {
                             hideProgressScreen();
@@ -345,13 +365,11 @@
             });
         }
 
-        // Inicializar DB al abrir la app
         window.onload = async () => {
             await initDB();
             await loadStateFromDB();
         };
 
-        // Purga de Base de Datos
         purgeBtn.addEventListener('click', () => {
             if(confirm("¿Estás seguro de borrar todo el historial guardado en esta aplicación?")) {
                 try {
@@ -362,17 +380,11 @@
             }
         });
 
-        // ==========================================
-        // INTERFAZ Y NAVEGACIÓN
-        // ==========================================
         function toggleModal() { settingsModal.style.display = settingsModal.style.display === 'flex' ? 'none' : 'flex'; }
         toggleSettingsBtn.addEventListener('click', toggleModal);
         closeModalBtn.addEventListener('click', toggleModal);
         addMoreBtn.addEventListener('click', () => document.getElementById('filesInput').click());
 
-        // ==========================================
-        // INGESTA CON BARRA DE PROGRESO REAL
-        // ==========================================
         filesInput.addEventListener('change', async (e) => {
             const files = Array.from(e.target.files); if (files.length === 0) return;
             
@@ -399,10 +411,9 @@
                                 globalMediaFiles[filename] = { url: URL.createObjectURL(blob), blob: blob };
                             }
 
-                            // Actualizar UI cada 5 archivos para mantener fluidez
                             if (i % 5 === 0 || i === totalFiles - 1) {
                                 updateProgress(Math.floor(((i + 1) / totalFiles) * 100));
-                                await new Promise(r => setTimeout(r, 0)); // Respiro al procesador
+                                await new Promise(r => setTimeout(r, 0)); 
                             }
                         }
                     } else if (file.name.endsWith('.txt')) {
@@ -442,7 +453,6 @@
             let uniqueSignatures = new Set();
             globalMessages.forEach(m => uniqueSignatures.add(`${m.displayDate}_${m.sender}_${m.content}`));
 
-            // Contar total de líneas para el porcentaje
             let totalLines = textLogsArray.reduce((acc, log) => acc + log.split('\n').length, 0);
             let processedLines = 0;
 
@@ -467,7 +477,6 @@
                     }
 
                     processedLines++;
-                    // Actualizar progreso cada 1000 líneas leídas
                     if (processedLines % 1000 === 0 || processedLines === totalLines) {
                         updateProgress(Math.floor((processedLines / totalLines) * 100));
                         await new Promise(r => setTimeout(r, 0));
@@ -509,9 +518,6 @@
             });
         }
 
-        // ==========================================
-        // APLICAR Y RENDERIZAR CON PROGRESO REAL
-        // ==========================================
         applyMappingBtn.addEventListener('click', async () => {
             document.querySelectorAll('.alias-input').forEach(input => {
                 const user = input.getAttribute('data-user'); const val = input.value.trim();
@@ -571,7 +577,6 @@
                 `;
                 fragment.appendChild(div);
 
-                // Actualizar barra de progreso cada 500 mensajes para no congelar la pantalla
                 if (i % 500 === 0 || i === totalMsgs - 1) {
                     updateProgress(Math.floor(((i + 1) / totalMsgs) * 100));
                     await new Promise(r => setTimeout(r, 0));
@@ -581,7 +586,6 @@
             messagesDiv.appendChild(fragment); 
             applyFilters();
             
-            // Forzar scroll al fondo y ocultar pantalla de carga
             setTimeout(() => {
                 chatUI.scrollTop = chatUI.scrollHeight; 
                 hideProgressScreen();
