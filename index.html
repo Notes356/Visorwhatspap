@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AETHER // V16_PIXEL_CORE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AETHER // V17_NEXUS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -14,17 +14,21 @@
             --solid-panel: #0a0d14; --sys-border: rgba(0, 210, 255, 0.2);
         }
         
+        /* FIX DE SCROLL: Aislamiento absoluto del navegador */
         html, body {
             background-color: var(--bg-void); color: #e2e8f0; font-family: 'Inter', sans-serif;
             margin: 0; padding: 0; width: 100vw; height: 100vh; height: 100dvh;
             position: fixed; top: 0; left: 0; overflow: hidden; 
-            /* FIX DE SCROLL: Bloquea el gesto de "Deslizar para recargar" nativo de Android */
-            overscroll-behavior-y: none; 
+            overscroll-behavior: none !important; /* Destruye el pull-to-refresh */
+            touch-action: none; /* Evita que el fondo intercepte gestos */
             display: flex; flex-direction: column;
             background-size: cover; background-position: center;
         }
 
-        #bg-overlay { position: absolute; inset: 0; background: rgba(5,7,10,0.85); z-index: -1; pointer-events: none; }
+        #bg-overlay { 
+            position: absolute; inset: 0; background: rgba(5,7,10,0.85); z-index: -1; pointer-events: none; 
+        }
+        
         .font-sys { font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; }
 
         .solid-panel { background: var(--solid-panel); border-bottom: 1px solid var(--sys-border); }
@@ -59,6 +63,15 @@
         .radio-input:checked + .radio-label.right-side { background: #0a2030; color: var(--sys-blue); }
         .radio-input { display: none; }
 
+        /* CHAT UI AISLADO: Aquí se permite el scroll, pero no se escapa al body */
+        #chatUI { 
+            flex: 1 1 0%; overflow-y: auto; overflow-x: hidden;
+            -webkit-overflow-scrolling: touch; 
+            overscroll-behavior-y: contain !important;
+            touch-action: pan-y; /* Solo permite deslizar arriba y abajo */
+            position: relative;
+        }
+
         .msg-container { margin-bottom: 0.5rem; max-width: 85%; word-wrap: break-word; display: flex; flex-direction: column; }
         .msg-wrapper { padding: 8px 12px; background: #0d121c; border: 1px solid #1f2937; }
         .msg-left { align-items: flex-start; margin-right: auto; }
@@ -82,26 +95,25 @@
         ::-webkit-scrollbar-thumb { background: var(--sys-blue); }
 
         .drop-zone { border: 1px dashed var(--sys-blue); background: #0a0d14; border-radius: 8px; }
-        #syncOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; }
         
-        /* FIX DE SCROLL PARA EL CHAT */
-        #chatUI { 
-            flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; 
-            overscroll-behavior-y: contain; /* Evita que el scroll del chat empuje la pantalla */
+        #syncOverlay { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; 
+            display: none; flex-direction: column; align-items: center; justify-content: center; 
         }
 
         /* BARRA DE PROGRESO PIXEL ART */
         .pixel-bar-container {
-            width: 80%; max-width: 300px; height: 22px; border: 2px solid var(--sys-blue);
-            background: #000; position: relative; margin-top: 15px; display: none;
-            box-shadow: 4px 4px 0 rgba(0, 210, 255, 0.2);
+            width: 80%; max-width: 300px; padding: 4px; background: #000;
+            border: 2px solid var(--sys-blue); box-shadow: 4px 4px 0 rgba(0, 210, 255, 0.2);
+            position: relative; margin: 15px 0; display: none;
         }
         .pixel-bar-fill {
-            height: 100%; background: var(--sys-blue); width: 0%;
+            height: 18px; background: var(--sys-blue); width: 0%;
+            transition: width 0.1s linear;
         }
         .pixel-bar-text {
             position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-            font-family: 'Rajdhani', monospace; font-weight: bold; font-size: 0.85rem; color: #fff;
+            font-family: 'Rajdhani', monospace; font-weight: bold; font-size: 0.9rem; color: #fff;
             text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
         }
     </style>
@@ -109,20 +121,21 @@
 <body>
 
     <div id="bg-overlay"></div>
+    
     <div id="syncOverlay">
-        <div class="font-sys text-[var(--sys-blue)] text-2xl font-bold" id="overlayText">INICIALIZANDO...</div>
+        <div class="font-sys text-[var(--sys-blue)] text-2xl font-bold" id="overlayText">INICIALIZANDO</div>
         
-        <div class="pixel-bar-container" id="progressBarContainer">
-            <div class="pixel-bar-fill" id="progressBarFill"></div>
-            <div class="pixel-bar-text" id="progressBarText">0%</div>
+        <div class="pixel-bar-container" id="pixelBarContainer">
+            <div class="pixel-bar-fill" id="pixelBarFill"></div>
+            <div class="pixel-bar-text" id="pixelBarText">0%</div>
         </div>
 
-        <div class="text-gray-500 text-sm mt-3 font-mono" id="overlaySubtext">Por favor espere.</div>
+        <div class="text-gray-500 text-sm mt-2 font-mono" id="overlaySubtext">Por favor espere...</div>
     </div>
 
     <header class="px-4 py-3 solid-panel z-30 shrink-0 flex justify-between items-center relative w-full">
         <h1 class="text-lg font-bold text-white font-sys flex items-center gap-2">
-            AETHER <span class="text-[var(--sys-blue)] font-normal text-sm opacity-70">| PIXEL_CORE</span>
+            AETHER <span class="text-[var(--sys-blue)] font-normal text-sm opacity-70">| NEXUS V17</span>
         </h1>
         <div class="flex gap-2">
             <button id="addMoreBtn" class="sys-btn font-sys hidden" style="border-color: #a855f7; color: #a855f7;">+ ARCHIVOS</button>
@@ -142,7 +155,9 @@
                     
                     <div class="bg-[#05070a] p-3 border border-[#333] border-l-2 border-l-[var(--sys-alert)]">
                         <h3 class="text-xs font-sys text-[var(--sys-alert)] mb-1 font-bold">SALTO TEMPORAL</h3>
-                        <select id="jumpDateSelect" class="sys-select py-1.5 mb-2"><option value="">[ SELECCIONA UNA FECHA ]</option></select>
+                        <select id="jumpDateSelect" class="sys-select py-1.5 mb-2">
+                            <option value="">[ SELECCIONA UNA FECHA ]</option>
+                        </select>
                         <button id="jumpBtn" class="sys-btn w-full" style="border-color: var(--sys-alert); color: var(--sys-alert);">SALTAR A FECHA</button>
                     </div>
 
@@ -161,7 +176,7 @@
             </div>
 
             <div class="p-3 border-t border-[#333] flex justify-end bg-[#05070a]">
-                <button id="applyMappingBtn" class="sys-btn font-sys">APLICAR CAMBIOS</button>
+                <button id="applyMappingBtn" class="sys-btn font-sys">APLICAR Y RENDERIZAR</button>
             </div>
         </div>
     </div>
@@ -172,7 +187,7 @@
         <div id="loaderUI" class="absolute inset-0 flex items-center justify-center p-4 z-10 bg-[#05070a]">
             <div class="drop-zone solid-panel p-6 text-center w-full max-w-lg cursor-pointer" onclick="document.getElementById('filesInput').click()">
                 <h2 class="text-xl font-sys font-bold text-[var(--sys-blue)] mb-1">SISTEMA INACTIVO</h2>
-                <p class="text-gray-400 text-xs mb-4">Toque aquí para cargar sus archivos.<br>(Si es Android, hágalo de a uno o use un ZIP)</p>
+                <p class="text-gray-400 text-xs mb-4">Toque aquí para cargar sus archivos.<br>(Los datos se guardarán permanentemente)</p>
             </div>
         </div>
         
@@ -182,23 +197,23 @@
     </div>
 
     <script>
+        // REFERENCIAS DOM
         const filesInput = document.getElementById('filesInput');
         const loaderUI = document.getElementById('loaderUI');
         const chatUI = document.getElementById('chatUI');
         const messagesDiv = document.getElementById('messagesDiv');
+        
+        const syncOverlay = document.getElementById('syncOverlay');
         const overlayText = document.getElementById('overlayText');
         const overlaySubtext = document.getElementById('overlaySubtext');
+        const pixelBarContainer = document.getElementById('pixelBarContainer');
+        const pixelBarFill = document.getElementById('pixelBarFill');
+        const pixelBarText = document.getElementById('pixelBarText');
         
-        // Elementos de la Barra de Progreso
-        const progressBarContainer = document.getElementById('progressBarContainer');
-        const progressBarFill = document.getElementById('progressBarFill');
-        const progressBarText = document.getElementById('progressBarText');
-
         const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
         const addMoreBtn = document.getElementById('addMoreBtn');
         const settingsModal = document.getElementById('settingsModal');
         const closeModalBtn = document.getElementById('closeModalBtn');
-        const syncOverlay = document.getElementById('syncOverlay');
         const purgeBtn = document.getElementById('purgeBtn');
         
         const searchInput = document.getElementById('searchInput');
@@ -207,13 +222,35 @@
         const jumpDateSelect = document.getElementById('jumpDateSelect');
         const jumpBtn = document.getElementById('jumpBtn');
 
+        // ESTADO GLOBAL
         let globalMediaFiles = {}; 
         let globalMessages = []; 
         let detectedSenders = new Set();
         let userAlignmentMap = {}; 
         let userAliasMap = {};     
 
-        // BASE DE DATOS
+        // CONTROL DE BARRA DE PROGRESO
+        function showProgressScreen(title, subtitle) {
+            syncOverlay.style.display = 'flex';
+            overlayText.innerText = title;
+            overlaySubtext.innerText = subtitle;
+            pixelBarContainer.style.display = 'block';
+            updateProgress(0);
+        }
+
+        function updateProgress(pct) {
+            pixelBarFill.style.width = pct + '%';
+            pixelBarText.innerText = pct + '%';
+        }
+
+        function hideProgressScreen() {
+            syncOverlay.style.display = 'none';
+            pixelBarContainer.style.display = 'none';
+        }
+
+        // ==========================================
+        // MOTOR DE BASE DE DATOS (IndexedDB)
+        // ==========================================
         const DB_NAME = "AetherDB_V2";
         let db;
 
@@ -222,7 +259,9 @@
                 const request = indexedDB.open(DB_NAME, 1);
                 request.onupgradeneeded = (e) => {
                     db = e.target.result;
-                    if (!db.objectStoreNames.contains('dataStore')) db.createObjectStore('dataStore');
+                    if (!db.objectStoreNames.contains('dataStore')) {
+                        db.createObjectStore('dataStore');
+                    }
                 };
                 request.onsuccess = (e) => { db = e.target.result; resolve(); };
                 request.onerror = (e) => resolve();
@@ -247,12 +286,15 @@
                     
                     tx.oncomplete = () => resolve();
                     tx.onerror = () => resolve();
+                    tx.onabort = () => resolve();
                 } catch(e) { resolve(); }
             });
         }
 
         async function loadStateFromDB() {
-            syncOverlay.style.display = 'flex'; overlayText.innerText = "LEYENDO MEMORIA...";
+            // Utilizamos la pantalla con porcentaje, aunque la lectura sea rápida
+            showProgressScreen("CONECTANDO...", "Cargando base de datos guardada");
+            updateProgress(20);
             
             return new Promise((resolve) => {
                 try {
@@ -265,7 +307,8 @@
                     store.get('senders').onsuccess = (e) => loadedSenders = e.target.result;
                     store.get('config').onsuccess = (e) => loadedConfig = e.target.result;
 
-                    tx.oncomplete = () => {
+                    tx.oncomplete = async () => {
+                        updateProgress(60);
                         if (loadedMsgs && loadedMsgs.length > 0) {
                             globalMessages = loadedMsgs;
                             detectedSenders = new Set(loadedSenders || []);
@@ -277,27 +320,40 @@
                             globalMediaFiles = {};
                             if(loadedMedia) {
                                 for(let key in loadedMedia) {
-                                    try { globalMediaFiles[key] = { blob: loadedMedia[key].blob, url: URL.createObjectURL(loadedMedia[key].blob) }; } catch(err) {}
+                                    try {
+                                        globalMediaFiles[key] = { blob: loadedMedia[key].blob, url: URL.createObjectURL(loadedMedia[key].blob) };
+                                    } catch(err) {}
                                 }
                             }
                             
+                            updateProgress(100);
                             buildIdentityMatrixUI();
-                            loaderUI.style.display = 'none'; chatUI.style.display = 'block';
-                            toggleSettingsBtn.style.display = 'flex'; addMoreBtn.style.display = 'flex';
-                            renderChat();
+                            loaderUI.style.display = 'none'; 
+                            chatUI.style.display = 'block';
+                            toggleSettingsBtn.style.display = 'flex'; 
+                            addMoreBtn.style.display = 'flex';
+                            
+                            // Ceder el control a renderChat que tiene su propia barra de progreso
+                            await renderChat();
+                        } else {
+                            hideProgressScreen();
                         }
-                        syncOverlay.style.display = 'none';
                         resolve();
                     };
-                    tx.onerror = () => { syncOverlay.style.display = 'none'; resolve(); };
-                } catch(e) { syncOverlay.style.display = 'none'; resolve(); }
+                    tx.onerror = () => { hideProgressScreen(); resolve(); };
+                } catch(e) { hideProgressScreen(); resolve(); }
             });
         }
 
-        window.onload = async () => { await initDB(); await loadStateFromDB(); };
+        // Inicializar DB al abrir la app
+        window.onload = async () => {
+            await initDB();
+            await loadStateFromDB();
+        };
 
+        // Purga de Base de Datos
         purgeBtn.addEventListener('click', () => {
-            if(confirm("¿Seguro que quieres borrar la memoria del chat?")) {
+            if(confirm("¿Estás seguro de borrar todo el historial guardado en esta aplicación?")) {
                 try {
                     const tx = db.transaction('dataStore', 'readwrite');
                     tx.objectStore('dataStore').clear();
@@ -306,55 +362,61 @@
             }
         });
 
+        // ==========================================
+        // INTERFAZ Y NAVEGACIÓN
+        // ==========================================
         function toggleModal() { settingsModal.style.display = settingsModal.style.display === 'flex' ? 'none' : 'flex'; }
         toggleSettingsBtn.addEventListener('click', toggleModal);
         closeModalBtn.addEventListener('click', toggleModal);
         addMoreBtn.addEventListener('click', () => document.getElementById('filesInput').click());
 
+        // ==========================================
+        // INGESTA CON BARRA DE PROGRESO REAL
+        // ==========================================
         filesInput.addEventListener('change', async (e) => {
             const files = Array.from(e.target.files); if (files.length === 0) return;
             
-            syncOverlay.style.display = 'flex'; 
-            overlayText.innerText = "EXTRAYENDO PAQUETE...";
-            overlaySubtext.innerText = "Descomprimiendo archivos";
-            progressBarContainer.style.display = 'block';
-            progressBarFill.style.width = '0%';
-            progressBarText.innerText = '0%';
+            showProgressScreen("EXTRAYENDO PAQUETE", "Descomprimiendo archivos...");
             
             try {
                 let textLogs = [];
-                for (let file of files) {
+                for (let f = 0; f < files.length; f++) {
+                    let file = files[f];
                     if (file.name.endsWith('.zip')) {
                         const zip = await JSZip.loadAsync(file); 
                         const fileNames = Object.keys(zip.files);
-                        const total = fileNames.length;
+                        const totalFiles = fileNames.length;
 
-                        for (let i = 0; i < total; i++) {
-                            const filename = fileNames[i]; const fileData = zip.files[filename];
+                        for (let i = 0; i < totalFiles; i++) {
+                            const filename = fileNames[i]; 
+                            const fileData = zip.files[filename];
                             if (fileData.dir) continue;
                             
-                            if (filename.endsWith('.txt')) textLogs.push(await fileData.async("string"));
-                            else {
+                            if (filename.endsWith('.txt')) {
+                                textLogs.push(await fileData.async("string"));
+                            } else {
                                 const blob = await fileData.async("blob");
                                 globalMediaFiles[filename] = { url: URL.createObjectURL(blob), blob: blob };
                             }
 
-                            // Actualiza la barra de progreso cada 5 archivos para no retrasar el proceso
-                            if (i % 5 === 0 || i === total - 1) {
-                                let pct = Math.floor(((i + 1) / total) * 100);
-                                progressBarFill.style.width = pct + '%';
-                                progressBarText.innerText = pct + '%';
-                                // Forzamos al navegador a dibujar la pantalla
-                                await new Promise(r => setTimeout(r, 0)); 
+                            // Actualizar UI cada 5 archivos para mantener fluidez
+                            if (i % 5 === 0 || i === totalFiles - 1) {
+                                updateProgress(Math.floor(((i + 1) / totalFiles) * 100));
+                                await new Promise(r => setTimeout(r, 0)); // Respiro al procesador
                             }
                         }
-                    } else if (file.name.endsWith('.txt')) textLogs.push(await file.text());
-                    else globalMediaFiles[file.name] = { url: URL.createObjectURL(file), blob: file };
+                    } else if (file.name.endsWith('.txt')) {
+                        textLogs.push(await file.text());
+                        updateProgress(100);
+                    } else {
+                        globalMediaFiles[file.name] = { url: URL.createObjectURL(file), blob: file };
+                        updateProgress(100);
+                    }
                 }
                 
-                progressBarContainer.style.display = 'none';
-                setTimeout(() => processRawTexts(textLogs), 50);
-            } catch (err) { alert("ERROR: " + err.message); syncOverlay.style.display = 'none'; progressBarContainer.style.display = 'none'; }
+                await processRawTexts(textLogs);
+            } catch (err) { alert("ERROR: " + err.message); hideProgressScreen(); }
+            
             filesInput.value = ""; 
         });
 
@@ -371,17 +433,27 @@
         }
 
         async function processRawTexts(textLogsArray) {
-            overlayText.innerText = "ORDENANDO DATOS...";
-            overlaySubtext.innerText = "Procesando mensajes de texto.";
+            if (textLogsArray.length === 0) return;
+
+            showProgressScreen("SINTETIZANDO TEXTOS", "Analizando cronología e identificando usuarios...");
+            
             const msgRegex = /^\[?(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})[, ]+(\d{1,2}:\d{2}(?::\d{2})?\s*(?:[a-zA-Z\.]{1,4})?)\]?\s*[\-]?\s*([^:]+):\s*(.*)/;
             
             let uniqueSignatures = new Set();
             globalMessages.forEach(m => uniqueSignatures.add(`${m.displayDate}_${m.sender}_${m.content}`));
 
-            textLogsArray.forEach(log => {
+            // Contar total de líneas para el porcentaje
+            let totalLines = textLogsArray.reduce((acc, log) => acc + log.split('\n').length, 0);
+            let processedLines = 0;
+
+            for (let log of textLogsArray) {
                 let currentMsg = null;
-                log.split('\n').forEach(line => {
+                const lines = log.split('\n');
+                
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i];
                     const match = line.match(msgRegex);
+                    
                     if (match) {
                         const dateStr = match[1]; const timeStr = match[2]; const sender = match[3].trim(); const content = match[4].trim();
                         detectedSenders.add(sender);
@@ -393,20 +465,28 @@
                         uniqueSignatures.delete(oldSig); currentMsg.content += "\n" + line.trim();
                         uniqueSignatures.add(`${currentMsg.displayDate}_${currentMsg.sender}_${currentMsg.content}`);
                     }
-                });
-            });
+
+                    processedLines++;
+                    // Actualizar progreso cada 1000 líneas leídas
+                    if (processedLines % 1000 === 0 || processedLines === totalLines) {
+                        updateProgress(Math.floor((processedLines / totalLines) * 100));
+                        await new Promise(r => setTimeout(r, 0));
+                    }
+                }
+            }
 
             globalMessages.sort((a, b) => a.dateObj - b.dateObj);
             buildIdentityMatrixUI();
             
-            overlayText.innerText = "GUARDANDO...";
-            overlaySubtext.innerText = "Asegurando persistencia de datos.";
+            showProgressScreen("GUARDANDO", "Asegurando datos en la memoria...");
+            updateProgress(50);
             await saveStateToDB();
+            updateProgress(100);
             
             loaderUI.style.display = 'none'; chatUI.style.display = 'block';
             toggleSettingsBtn.style.display = 'flex'; addMoreBtn.style.display = 'flex';
-            syncOverlay.style.display = 'none';
-            renderChat(); 
+            
+            await renderChat(); 
         }
 
         function buildIdentityMatrixUI() {
@@ -429,6 +509,9 @@
             });
         }
 
+        // ==========================================
+        // APLICAR Y RENDERIZAR CON PROGRESO REAL
+        // ==========================================
         applyMappingBtn.addEventListener('click', async () => {
             document.querySelectorAll('.alias-input').forEach(input => {
                 const user = input.getAttribute('data-user'); const val = input.value.trim();
@@ -438,18 +521,29 @@
                 userAlignmentMap[radio.getAttribute('data-user')] = radio.value;
             });
 
-            settingsModal.style.display = 'none'; syncOverlay.style.display = 'flex'; overlayText.innerText = "APLICANDO...";
+            settingsModal.style.display = 'none'; 
             
+            showProgressScreen("APLICANDO CAMBIOS", "Guardando nueva configuración...");
+            updateProgress(50);
             await saveStateToDB(); 
-            setTimeout(() => { renderChat(); syncOverlay.style.display = 'none'; }, 50); 
+            
+            await renderChat(); 
         });
 
-        function renderChat() {
-            messagesDiv.innerHTML = ''; let lastDateRendered = ""; const fragment = document.createDocumentFragment();
+        async function renderChat() {
+            showProgressScreen("CONSTRUYENDO INTERFAZ", "Renderizando burbujas de chat...");
+            
+            messagesDiv.innerHTML = ''; 
+            let lastDateRendered = ""; 
+            const fragment = document.createDocumentFragment();
             jumpDateSelect.innerHTML = '<option value="">[ SELECCIONA UNA FECHA ]</option>';
 
-            globalMessages.forEach(msg => {
-                const dateOnly = msg.dateObj.toISOString().split('T')[0]; const displayDateOnly = msg.dateObj.toLocaleDateString();
+            const totalMsgs = globalMessages.length;
+
+            for (let i = 0; i < totalMsgs; i++) {
+                const msg = globalMessages[i];
+                const dateOnly = msg.dateObj.toISOString().split('T')[0]; 
+                const displayDateOnly = msg.dateObj.toLocaleDateString();
                 
                 if (displayDateOnly !== lastDateRendered && displayDateOnly !== "Invalid Date") {
                     const dateDiv = document.createElement('div'); dateDiv.className = "date-divider filter-item"; dateDiv.setAttribute('data-isodata', dateOnly);
@@ -476,10 +570,22 @@
                     </div>
                 `;
                 fragment.appendChild(div);
-            });
+
+                // Actualizar barra de progreso cada 500 mensajes para no congelar la pantalla
+                if (i % 500 === 0 || i === totalMsgs - 1) {
+                    updateProgress(Math.floor(((i + 1) / totalMsgs) * 100));
+                    await new Promise(r => setTimeout(r, 0));
+                }
+            }
             
-            messagesDiv.appendChild(fragment); applyFilters();
-            chatUI.scrollTop = chatUI.scrollHeight; 
+            messagesDiv.appendChild(fragment); 
+            applyFilters();
+            
+            // Forzar scroll al fondo y ocultar pantalla de carga
+            setTimeout(() => {
+                chatUI.scrollTop = chatUI.scrollHeight; 
+                hideProgressScreen();
+            }, 100);
         }
 
         jumpBtn.addEventListener('click', () => {
@@ -531,4 +637,3 @@
     </script>
 </body>
 </html>
- 
