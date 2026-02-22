@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AETHER // V13_NAV_CORE_FIX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-void: #05070a; 
+            --sys-blue: #00d2ff;
+            --sys-alert: #ff2a5f;
+            --solid-panel: #0a0d14; 
+            --sys-border: rgba(0, 210, 255, 0.2);
+        }
+        
+        body {
+            background-color: var(--bg-void); color: #e2e8f0; font-family: 'Inter', sans-serif;
+            margin: 0; padding: 0;
+            /* FIX DE ESTRUCTURA: Ancla la app a los bordes de la pantalla para evitar que el navegador la empuje */
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; height: 100%; width: 100%;
+            display: flex; flex-direction: column; overflow: hidden;
+            background-size: cover; background-position: center;
+        }
+
+        #bg-overlay { position: absolute; inset: 0; background: rgba(5,7,10,0.85); z-index: -1; pointer-events: none; }
+        .font-sys { font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .solid-panel { background: var(--solid-panel); border: 1px solid var(--sys-border); }
+
+        .sys-btn {
+            background: #0f172a; border: 1px solid var(--sys-blue); color: var(--sys-blue); 
+            padding: 4px 12px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.75rem; 
+            display: flex; align-items: center; justify-content: center; gap: 6px; transition: background 0.2s;
+        }
+        .sys-btn:hover { background: var(--sys-blue); color: #000; }
+        .export-btn { border-color: #00ff88; color: #00ff88; }
+        .export-btn:hover { background: #00ff88; color: #000; }
+        .fs-btn { border-color: #a855f7; color: #a855f7; }
+        .fs-btn:hover { background: #a855f7; color: #000; }
+
+        .sys-input, .sys-select {
+            background: #000; border: 1px solid #333; border-bottom: 2px solid var(--sys-blue);
+            color: #fff; padding: 8px 12px; width: 100%; border-radius: 4px 4px 0 0; outline: none; 
+            font-family: 'Inter', sans-serif; font-size: 0.8rem;
+        }
+
+        #settingsModal {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95); z-index: 50; 
+            display: none; align-items: center; justify-content: center;
+        }
+        .modal-content {
+            width: 95%; max-width: 900px; max-height: 85vh; display: flex; flex-direction: column;
+            border-top: 2px solid var(--sys-blue); border-radius: 8px; background: #0a0d14;
+        }
+
+        .identity-row { display: grid; grid-template-columns: 1.2fr 1.5fr auto; gap: 12px; align-items: center; padding: 8px 12px; border-bottom: 1px solid #1a1a1a; }
+        @media (max-width: 768px) { .identity-row { grid-template-columns: 1fr; gap: 6px;} }
+        .radio-group { display: flex; gap: 2px; background: #000; padding: 3px; border-radius: 4px; border: 1px solid #333;}
+        .radio-label { cursor: pointer; padding: 4px 12px; font-size: 0.7rem; font-weight: 600; color: #666; border-radius: 2px; }
+        .radio-input:checked + .radio-label.left-side { background: #331018; color: var(--sys-alert); }
+        .radio-input:checked + .radio-label.right-side { background: #0a2030; color: var(--sys-blue); }
+        .radio-input { display: none; }
+
+        .msg-container { margin-bottom: 0.5rem; max-width: 85%; word-wrap: break-word; display: flex; flex-direction: column; }
+        .msg-wrapper { padding: 8px 12px; background: #0d121c; border: 1px solid #1f2937; }
+        .msg-left { align-items: flex-start; margin-right: auto; }
+        .msg-left .msg-wrapper { border-left: 3px solid var(--sys-alert); border-radius: 0 8px 8px 8px; }
+        .msg-right { align-items: flex-end; margin-left: auto; }
+        .msg-right .msg-wrapper { border-right: 3px solid var(--sys-blue); border-radius: 8px 0 8px 8px; }
+        
+        .name-label { font-family: 'Rajdhani', sans-serif; font-size: 0.85rem; font-weight: 700; margin-bottom: 2px; }
+        .msg-left .name-label { color: var(--sys-alert); }
+        .msg-right .name-label { color: var(--sys-blue); }
+        .timestamp { font-size: 0.65rem; color: #64748b; margin-top: 2px; text-align: right; }
+
+        .date-divider { text-align: center; margin: 1rem 0; display: flex; align-items: center; justify-content: center; scroll-margin-top: 60px; }
+        .date-divider span { background: #000; border: 1px solid #333; padding: 2px 12px; border-radius: 12px; font-family: 'Rajdhani', sans-serif; font-size: 0.75rem; color: #94a3b8; }
+
+        .media-file { max-width: 100%; max-height: 250px; object-fit: contain; border-radius: 4px; margin-top: 4px; background: #000; }
+        .sticker-file { max-width: 120px; max-height: 120px; object-fit: contain; margin-top: 2px; }
+        
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: var(--sys-blue); }
+
+        .drop-zone { border: 1px dashed var(--sys-blue); background: #0a0d14; border-radius: 8px; }
+        #syncOverlay { position: fixed; inset: 0; background: #000; z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+
+    <div id="bg-overlay"></div>
+    <div id="syncOverlay">
+        <div class="font-sys text-[var(--sys-blue)] text-2xl font-bold" id="overlayText">EJECUTANDO...</div>
+        <div class="text-gray-500 text-sm mt-2 font-mono">Por favor espere.</div>
+    </div>
+
+    <header class="px-4 py-2 solid-panel z-30 shrink-0 border-b border-x-0 border-t-0 flex justify-between items-center relative">
+        <h1 class="text-lg font-bold text-white font-sys flex items-center gap-2">
+            AETHER <span class="text-[var(--sys-blue)] font-normal text-sm opacity-70">| NAV_CORE</span>
+        </h1>
+        <div class="flex gap-2">
+            <button id="fullscreenBtn" class="sys-btn fs-btn font-sys hidden" title="Pantalla Completa">[ ]</button>
+            <button id="toggleSettingsBtn" class="sys-btn font-sys hidden">AJUSTES / NAVEGACIÓN</button>
+            <button id="exportBtn" class="sys-btn export-btn font-sys hidden">EXPORTAR</button>
+        </div>
+    </header>
+
+    <div id="settingsModal">
+        <div class="modal-content">
+            <div class="p-3 border-b border-[#333] flex justify-between items-center bg-[#05070a]">
+                <h2 class="text-sm font-sys text-[var(--sys-blue)] font-bold">PANEL DE CONTROL TÁCTICO</h2>
+                <button id="closeModalBtn" class="text-gray-500 hover:text-white text-xl font-mono">X</button>
+            </div>
+            
+            <div class="p-4 overflow-y-auto flex-1 flex flex-col md:flex-row gap-4 bg-[#0a0d14]">
+                <div class="w-full md:w-1/3 flex flex-col gap-4">
+                    
+                    <div class="bg-[#05070a] p-3 border border-[#333] border-l-2 border-l-[var(--sys-alert)]">
+                        <h3 class="text-xs font-sys text-[var(--sys-alert)] mb-1 font-bold">SALTO TEMPORAL RÁPIDO</h3>
+                        <p class="text-[9px] text-gray-500 mb-2">Viaja directamente a una fecha registrada.</p>
+                        <select id="jumpDateSelect" class="sys-select py-1.5 mb-2">
+                            <option value="">[ SELECCIONA UNA FECHA ]</option>
+                        </select>
+                        <button id="jumpBtn" class="sys-btn w-full" style="border-color: var(--sys-alert); color: var(--sys-alert);">
+                            >> INICIAR SALTO
+                        </button>
+                    </div>
+
+                    <div class="bg-[#05070a] p-3 border border-[#333]">
+                        <h3 class="text-xs font-sys text-[#00ff88] mb-2">FONDO PERSONALIZADO</h3>
+                        <input type="file" id="bgInput" accept="image/*" class="sys-input text-[10px] mb-2 p-1.5">
+                        <button id="clearBgBtn" class="text-[10px] font-sys text-gray-500 hover:text-white">> QUITAR FONDO</button>
+                    </div>
+
+                    <div class="flex flex-col gap-2 bg-[#05070a] p-3 border border-[#333]">
+                        <h3 class="text-xs font-sys text-[var(--sys-blue)] mb-1">FILTROS GLOBALES</h3>
+                        <input type="text" id="searchInput" placeholder="Buscar texto..." class="sys-input py-1.5">
+                        <select id="filterSelect" class="sys-select py-1.5">
+                            <option value="all">MOSTRAR TODOS</option>
+                            <option value="photo">IMÁGENES</option>
+                            <option value="sticker">STICKERS</option>
+                            <option value="video">VIDEOS</option>
+                            <option value="audio">AUDIOS</option>
+                        </select>
+                        <div class="grid grid-cols-2 gap-2 mt-1">
+                            <div><label class="text-[9px] text-gray-500">INICIO</label><input type="date" id="dateStart" class="sys-input py-1 px-1"></div>
+                            <div><label class="text-[9px] text-gray-500">FIN</label><input type="date" id="dateEnd" class="sys-input py-1 px-1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full md:w-2/3 flex flex-col">
+                    <h3 class="text-xs font-sys text-white mb-2">MATRIZ DE IDENTIDAD (ALIAS Y POSICIÓN)</h3>
+                    <div id="identityMatrix" class="flex-1 bg-[#000] border border-[#333] overflow-y-auto max-h-[50vh]"></div>
+                </div>
+            </div>
+
+            <div class="p-3 border-t border-[#333] flex justify-end bg-[#05070a]">
+                <button id="applyMappingBtn" class="sys-btn font-sys">APLICAR CAMBIOS</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex-1 relative flex flex-col min-h-0 overflow-hidden">
+        <div id="loaderUI" class="absolute inset-0 flex items-center justify-center p-4 z-10 bg-[#05070a]">
+            <div class="drop-zone solid-panel p-6 text-center relative w-full max-w-lg">
+                <input type="file" id="filesInput" multiple accept=".zip,.txt,image/*,video/*,audio/*,.webp" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-30">
+                <h2 class="text-xl font-sys font-bold text-[var(--sys-blue)] mb-1">INSERTE DATOS</h2>
+                <p class="text-gray-400 text-xs mb-4">Arrastre ZIP, TXT o multimedia aquí.</p>
+                <div id="statusText" class="hidden text-sm font-sys font-bold text-[#00ff88]">ESPERANDO ARCHIVOS...</div>
+            </div>
+        </div>
+        
+        <main id="chatUI" class="flex-1 overflow-y-auto p-2 md:px-6 z-0 hidden" style="will-change: transform;">
+            <div id="messagesDiv" class="max-w-4xl mx-auto flex flex-col pb-10 pt-2"></div>
+        </main>
+    </div>
+
+    <script>
+        const filesInput = document.getElementById('filesInput');
+        const loaderUI = document.getElementById('loaderUI');
+        const chatUI = document.getElementById('chatUI');
+        const messagesDiv = document.getElementById('messagesDiv');
+        const statusText = document.getElementById('statusText');
+        const overlayText = document.getElementById('overlayText');
+        
+        const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const syncOverlay = document.getElementById('syncOverlay');
+        
+        const bgInput = document.getElementById('bgInput');
+        const clearBgBtn = document.getElementById('clearBgBtn');
+        
+        const searchInput = document.getElementById('searchInput');
+        const filterSelect = document.getElementById('filterSelect');
+        const dateStart = document.getElementById('dateStart');
+        const dateEnd = document.getElementById('dateEnd');
+        
+        const identityMatrix = document.getElementById('identityMatrix');
+        const applyMappingBtn = document.getElementById('applyMappingBtn');
+
+        const jumpDateSelect = document.getElementById('jumpDateSelect');
+        const jumpBtn = document.getElementById('jumpBtn');
+
+        let globalMediaFiles = {}; let globalMessages = []; let detectedSenders = new Set();
+        let userAlignmentMap = {}; let userAliasMap = {};     
+
+        function toggleModal() { settingsModal.style.display = settingsModal.style.display === 'flex' ? 'none' : 'flex'; }
+        toggleSettingsBtn.addEventListener('click', toggleModal);
+        closeModalBtn.addEventListener('click', toggleModal);
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+            else if (document.exitFullscreen) document.exitFullscreen();
+        });
+
+        bgInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) document.body.style.backgroundImage = `url('${URL.createObjectURL(e.target.files[0])}')`;
+        });
+        clearBgBtn.addEventListener('click', () => { document.body.style.backgroundImage = 'none'; bgInput.value = ''; });
+
+        filesInput.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files); if (files.length === 0) return;
+            
+            statusText.classList.remove('hidden');
+            statusText.innerText = "EXTRAYENDO A MÁXIMA VELOCIDAD...";
+            filesInput.style.pointerEvents = 'none'; 
+
+            try {
+                let textLogs = [];
+                for (let file of files) {
+                    if (file.name.endsWith('.zip')) {
+                        const zip = await JSZip.loadAsync(file); const fileNames = Object.keys(zip.files);
+                        for (let i = 0; i < fileNames.length; i++) {
+                            const filename = fileNames[i]; const fileData = zip.files[filename];
+                            if (fileData.dir) continue;
+                            
+                            if (filename.endsWith('.txt')) textLogs.push(await fileData.async("string"));
+                            else {
+                                const blob = await fileData.async("blob");
+                                globalMediaFiles[filename] = { url: URL.createObjectURL(blob), blob: blob };
+                            }
+                        }
+                    } else if (file.name.endsWith('.txt')) textLogs.push(await file.text());
+                    else globalMediaFiles[file.name] = { url: URL.createObjectURL(file), blob: file };
+                }
+                
+                if (textLogs.length === 0) throw new Error("FALTA ARCHIVO .TXT");
+                statusText.innerText = "PROCESANDO CHAT...";
+                setTimeout(() => processRawTexts(textLogs), 50);
+            } catch (err) { statusText.innerText = "ERROR: " + err.message; statusText.style.color = "red"; }
+        });
+
+        function parseWhatsAppDate(dateStr, timeStr) {
+            try {
+                let cDate = dateStr.replace(/[\u202F\u200E\s]/g, ''); let cTime = timeStr.replace(/[\u202F\u200E]/g, '').toUpperCase();
+                let parts = cDate.split(/[\/\-\.]/); let p1 = parseInt(parts[0], 10), p2 = parseInt(parts[1], 10), p3 = parseInt(parts[2], 10);
+                let day = p1, month = p2 - 1, year = p3; if (p1 <= 12 && p2 > 12) { day = p2; month = p1 - 1; } if (year < 100) year += 2000;
+                let isPM = cTime.includes('P'); let isAM = cTime.includes('A'); let timeParts = cTime.replace(/[A-Z\.]/g, '').trim().split(':');
+                let hours = parseInt(timeParts[0], 10), minutes = parseInt(timeParts[1], 10), secs = timeParts[2] ? parseInt(timeParts[2], 10) : 0;
+                if (isPM && hours < 12) hours += 12; if (isAM && hours === 12) hours = 0;
+                return new Date(year, month, day, hours, minutes, secs);
+            } catch (e) { return new Date(0); }
+        }
+
+        function processRawTexts(textLogsArray) {
+            globalMessages = []; let uniqueSignatures = new Set(); detectedSenders.clear();
+            const msgRegex = /^\[?(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})[, ]+(\d{1,2}:\d{2}(?::\d{2})?\s*(?:[a-zA-Z\.]{1,4})?)\]?\s*[\-]?\s*([^:]+):\s*(.*)/;
+
+            textLogsArray.forEach(log => {
+                let currentMsg = null;
+                log.split('\n').forEach(line => {
+                    const match = line.match(msgRegex);
+                    if (match) {
+                        const dateStr = match[1]; const timeStr = match[2]; const sender = match[3].trim(); const content = match[4].trim();
+                        detectedSenders.add(sender);
+                        currentMsg = { dateObj: parseWhatsAppDate(dateStr, timeStr), displayDate: `${dateStr} ${timeStr}`, sender: sender, content: content };
+                        const sig = `${dateStr}_${timeStr}_${sender}_${content}`;
+                        if (!uniqueSignatures.has(sig)) { uniqueSignatures.add(sig); globalMessages.push(currentMsg); }
+                    } else if (line.trim().length > 0 && currentMsg) {
+                        const oldSig = `${currentMsg.displayDate}_${currentMsg.sender}_${currentMsg.content}`;
+                        uniqueSignatures.delete(oldSig); currentMsg.content += "\n" + line.trim();
+                        uniqueSignatures.add(`${currentMsg.displayDate}_${currentMsg.sender}_${currentMsg.content}`);
+                    }
+                });
+            });
+
+            globalMessages.sort((a, b) => a.dateObj - b.dateObj);
+            buildIdentityMatrixUI();
+            
+            loaderUI.style.display = 'none'; chatUI.style.display = 'block';
+            toggleSettingsBtn.style.display = 'flex'; exportBtn.style.display = 'flex'; fullscreenBtn.style.display = 'flex';
+            
+            renderChat(); 
+        }
+
+        function buildIdentityMatrixUI() {
+            identityMatrix.innerHTML = ''; 
+            Array.from(detectedSenders).forEach((sender, index) => {
+                let defaultAlign = userAlignmentMap[sender] || ((sender.toLowerCase() === 'yo' || index === 0) ? 'right' : 'left');
+                userAlignmentMap[sender] = defaultAlign; let currentAlias = userAliasMap[sender] || '';
+                const safeSender = sender.replace(/"/g, '&quot;');
+
+                const row = document.createElement('div'); row.className = 'identity-row';
+                row.innerHTML = `
+                    <div class="text-[11px] font-sys text-gray-300 truncate" title="${sender}">${sender}</div>
+                    <div><input type="text" class="sys-input py-1 px-2 rounded text-[11px] alias-input" data-user="${safeSender}" placeholder="Alias..." value="${currentAlias}"></div>
+                    <div class="radio-group">
+                        <label><input type="radio" name="align_${index}" value="left" class="radio-input align-trigger" data-user="${safeSender}" ${defaultAlign === 'left' ? 'checked' : ''}><span class="radio-label left-side">IZQ</span></label>
+                        <label><input type="radio" name="align_${index}" value="right" class="radio-input align-trigger" data-user="${safeSender}" ${defaultAlign === 'right' ? 'checked' : ''}><span class="radio-label right-side">DER</span></label>
+                    </div>
+                `;
+                identityMatrix.appendChild(row);
+            });
+        }
+
+        applyMappingBtn.addEventListener('click', () => {
+            document.querySelectorAll('.alias-input').forEach(input => {
+                const user = input.getAttribute('data-user'); const val = input.value.trim();
+                if (val) userAliasMap[user] = val; else delete userAliasMap[user];
+            });
+            document.querySelectorAll('.align-trigger:checked').forEach(radio => {
+                userAlignmentMap[radio.getAttribute('data-user')] = radio.value;
+            });
+
+            settingsModal.style.display = 'none'; syncOverlay.style.display = 'flex'; overlayText.innerText = "APLICANDO CAMBIOS...";
+            setTimeout(() => { renderChat(); syncOverlay.style.display = 'none'; }, 50); 
+        });
+
+        function renderChat() {
+            messagesDiv.innerHTML = ''; let lastDateRendered = ""; const fragment = document.createDocumentFragment();
+            
+            jumpDateSelect.innerHTML = '<option value="">[ SELECCIONA UNA FECHA ]</option>';
+
+            globalMessages.forEach(msg => {
+                const dateOnly = msg.dateObj.toISOString().split('T')[0]; const displayDateOnly = msg.dateObj.toLocaleDateString();
+                
+                if (displayDateOnly !== lastDateRendered && displayDateOnly !== "Invalid Date") {
+                    const dateDiv = document.createElement('div'); dateDiv.className = "date-divider filter-item"; dateDiv.setAttribute('data-isodata', dateOnly);
+                    dateDiv.innerHTML = `<span>${displayDateOnly}</span>`; fragment.appendChild(dateDiv); lastDateRendered = displayDateOnly;
+                    
+                    const option = document.createElement('option');
+                    option.value = dateOnly; option.text = displayDateOnly;
+                    jumpDateSelect.appendChild(option);
+                }
+
+                const isRight = (userAlignmentMap[msg.sender] || 'left') === 'right';
+                const displayName = userAliasMap[msg.sender] || msg.sender; 
+                let finalContent = processMediaContent(msg.content).replace(/\n/g, '<br>');
+                
+                let msgType = 'text';
+                if (finalContent.includes('class="sticker-file"')) msgType = 'sticker';
+                else if (finalContent.includes('<img')) msgType = 'photo';
+                else if (finalContent.includes('<video')) msgType = 'video';
+                else if (finalContent.includes('<audio')) msgType = 'audio';
+
+                const div = document.createElement('div');
+                div.className = `msg-container filter-item ${isRight ? 'msg-right' : 'msg-left'}`;
+                div.setAttribute('data-type', msgType); div.setAttribute('data-content', msg.content.toLowerCase()); div.setAttribute('data-isodata', dateOnly);
+
+                div.innerHTML = `
+                    <div class="msg-wrapper">
+                        <div class="name-label">${displayName}</div>
+                        <div class="text-[0.85rem] md:text-sm leading-relaxed text-gray-200">${finalContent}</div>
+                        <div class="timestamp">${msg.dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                    </div>
+                `;
+                fragment.appendChild(div);
+            });
+            
+            messagesDiv.appendChild(fragment); applyFilters();
+            chatUI.scrollTop = chatUI.scrollHeight; 
+        }
+
+        jumpBtn.addEventListener('click', () => {
+            const targetDate = jumpDateSelect.value;
+            if (!targetDate) return;
+            
+            const targetElement = document.querySelector(`.date-divider[data-isodata="${targetDate}"]`);
+            if (targetElement) {
+                toggleModal(); 
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                targetElement.querySelector('span').style.borderColor = "var(--sys-alert)";
+                targetElement.querySelector('span').style.color = "var(--sys-alert)";
+                setTimeout(() => {
+                    targetElement.querySelector('span').style.borderColor = "#333";
+                    targetElement.querySelector('span').style.color = "#94a3b8";
+                }, 2000);
+            }
+        });
+
+        function processMediaContent(text) {
+            let processedText = text;
+            for (let filename in globalMediaFiles) {
+                const safeFilename = filename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); const regex = new RegExp(safeFilename, 'g');
+                if (regex.test(text)) {
+                    const fileUrl = globalMediaFiles[filename].url; const ext = filename.split('.').pop().toLowerCase();
+                    const isSticker = ext === 'webp' || filename.toUpperCase().includes('STK');
+                    
+                    let mediaHtml = '';
+                    if (isSticker) mediaHtml = `<br><img src="${fileUrl}" class="sticker-file" loading="lazy">`;
+                    else if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) mediaHtml = `<br><img src="${fileUrl}" class="media-file" loading="lazy">`;
+                    else if (['mp4', 'webm'].includes(ext)) mediaHtml = `<br><video controls src="${fileUrl}" class="media-file"></video>`;
+                    else if (['opus', 'ogg', 'mp3', 'm4a', 'wav'].includes(ext)) mediaHtml = `<br><audio controls src="${fileUrl}" class="media-file mt-1"></audio>`;
+                    else mediaHtml = `<br><a href="${fileUrl}" download="${filename}" class="text-[var(--sys-blue)] text-xs font-bold underline mt-1 block">DESCARGAR</a>`;
+                    processedText = processedText.replace(regex, mediaHtml);
+                }
+            }
+            return processedText;
+        }
+
+        function applyFilters() {
+            const searchTerm = searchInput.value.toLowerCase().trim(); const filterType = filterSelect.value;
+            const startD = dateStart.value; const endD = dateEnd.value;     
+
+            document.querySelectorAll('.filter-item').forEach(el => {
+                const isoDate = el.getAttribute('data-isodata'); let dateValid = true;
+                if (startD && isoDate < startD) dateValid = false; if (endD && isoDate > endD) dateValid = false;
+
+                if (el.classList.contains('date-divider')) el.style.display = dateValid ? 'flex' : 'none';
+                else {
+                    const content = el.getAttribute('data-content'); const type = el.getAttribute('data-type');
+                    const matchesSearch = content.includes(searchTerm); const matchesType = filterType === 'all' || type === filterType;
+                    el.style.display = (dateValid && matchesSearch && matchesType) ? 'flex' : 'none';
+                }
+            });
+        }
+        searchInput.addEventListener('input', applyFilters); 
+        filterSelect.addEventListener('change', applyFilters); dateStart.addEventListener('change', applyFilters); dateEnd.addEventListener('change', applyFilters);
+
+        exportBtn.addEventListener('click', async () => {
+            if (globalMessages.length === 0) return;
+            syncOverlay.style.display = 'flex'; overlayText.innerText = "EXPORTANDO...";
+            
+            setTimeout(async () => {
+                try {
+                    const zip = new JSZip(); let mergedText = "";
+                    globalMessages.forEach(msg => {
+                        const alias = userAliasMap[msg.sender] || msg.sender;
+                        const dd = String(msg.dateObj.getDate()).padStart(2, '0'); const mm = String(msg.dateObj.getMonth() + 1).padStart(2, '0');
+                        const yyyy = msg.dateObj.getFullYear(); const hh = String(msg.dateObj.getHours()).padStart(2, '0');
+                        const min = String(msg.dateObj.getMinutes()).padStart(2, '0'); const ss = String(msg.dateObj.getSeconds()).padStart(2, '0');
+                        mergedText += `[${dd}/${mm}/${yyyy}, ${hh}:${min}:${ss}] ${alias}: ${msg.content}\r\n`;
+                    });
+                    zip.file("AETHER_ARCHIVE_EXPORT.txt", mergedText);
+                    for (let filename in globalMediaFiles) zip.file(filename, globalMediaFiles[filename].blob);
+
+                    const zipBlob = await zip.generateAsync({type:"blob"}); const downloadUrl = URL.createObjectURL(zipBlob);
+                    const a = document.createElement("a"); a.href = downloadUrl; a.download = "AETHER_EXPORT.zip"; 
+                    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                } catch (error) { alert("ERROR: " + error.message); } 
+                finally { syncOverlay.style.display = 'none'; }
+            }, 50);
+        });
+    </script>
+</body>
+</html>
