@@ -1,151 +1,176 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
-    <title>AETHER // V28_STABLE</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>AETHER // V27.2_REC_FIX</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg-void:#05070a;--sys-blue:#00d2ff;--sys-alert:#ff2a5f;--solid-panel:#0a0d14;--sys-border:rgba(0,210,255,0.2)}
+html,body{background-color:var(--bg-void);color:#e2e8f0;font-family:'Inter',sans-serif;margin:0;padding:0;width:100%;min-height:100vh;background-attachment:fixed;background-size:cover;background-position:center;overflow-x:hidden}
+#bg-overlay{position:fixed;inset:0;background:rgba(5,7,10,0.85);z-index:-1;pointer-events:none}
+.font-sys{font-family:'Rajdhani',sans-serif;text-transform:uppercase;letter-spacing:0.05em}
+.solid-panel{background:var(--solid-panel);border-bottom:1px solid var(--sys-border)}
+.sys-btn{background:#0f172a;border:1px solid var(--sys-blue);color:var(--sys-blue);padding:6px 14px;border-radius:4px;cursor:pointer;font-weight:600;font-size:0.75rem;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .1s}
+.sys-btn:active{transform:scale(.98)}
+.fs-btn{border-color:#a855f7;color:#a855f7}
+.fs-btn:hover{background:#a855f7;color:#000}
+.rec-btn{border-color:#ff2a5f;color:#ff2a5f}
+.rec-btn.recording{background:#ff2a5f;color:#fff;box-shadow:0 0 10px #ff2a5f;animation:pulseRec 1s infinite}
+@keyframes pulseRec{0%{opacity:1}50%{opacity:0.5}100%{opacity:1}}
+.sys-input,.sys-select{background:#000;border:1px solid #333;border-bottom:2px solid var(--sys-blue);color:#fff;padding:6px 10px;width:100%;border-radius:4px 4px 0 0;outline:none;font-family:'Inter',sans-serif;font-size:0.75rem}
+header{position:fixed;top:0;left:0;right:0;z-index:50;height:55px}
+.main-container{padding-top:65px;width:100%}
+#settingsModal{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:60;display:none;align-items:center;justify-content:center}
+.modal-content{width:95%;max-width:1000px;max-height:90vh;display:flex;flex-direction:column;border-top:2px solid var(--sys-blue);border-radius:8px;background:#0a0d14}
+.identity-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:center;padding:6px 8px;border-bottom:1px solid #1a1a1a}
+.radio-group{display:flex;gap:2px;background:#000;padding:3px;border-radius:4px;border:1px solid #333}
+.radio-label{cursor:pointer;padding:4px 10px;font-size:.65rem;font-weight:600;color:#666;border-radius:2px}
+.radio-input:checked+.radio-label.left-side{background:#331018;color:var(--sys-alert)}
+.radio-input:checked+.radio-label.right-side{background:#0a2030;color:var(--sys-blue)}
+.radio-input{display:none}
+.msg-container{margin-bottom:0.5rem;max-width:85%;word-wrap:break-word;display:flex;flex-direction:column}
+.msg-wrapper{padding:8px 12px;background:#0d121c;border:1px solid #1f2937;position:relative;will-change:transform}
+.msg-left{align-items:flex-start;margin-right:auto}
+.msg-left .msg-wrapper{border-left:3px solid var(--sys-alert);border-radius:0 8px 8px 8px}
+.msg-right{align-items:flex-end;margin-left:auto}
+.msg-right .msg-wrapper{border-right:3px solid var(--sys-blue);border-radius:8px 0 8px 8px}
+.name-label{font-family:'Rajdhani',sans-serif;font-size:.85rem;font-weight:700;margin-bottom:2px;transition:all .3s ease}
+.msg-left .name-label{color:var(--sys-alert)}
+.msg-right .name-label{color:var(--sys-blue)}
+.timestamp{font-size:.65rem;color:#64748b;margin-top:2px;text-align:right}
+.date-divider{text-align:center;margin:1rem 0;display:flex;align-items:center;justify-content:center;scroll-margin-top:70px}
+.date-divider span{background:#000;border:1px solid #333;padding:2px 12px;border-radius:12px;font-family:'Rajdhani',sans-serif;font-size:.75rem;color:#94a3b8}
+.media-file{max-width:100%;max-height:250px;object-fit:contain;border-radius:4px;margin-top:4px;background:#000}
+.sticker-file{max-width:120px;max-height:120px;object-fit:contain;margin-top:2px}
+.drop-zone{border:1px dashed var(--sys-blue);background:#0a0d14;border-radius:8px;margin:20px}
+#syncOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center}
+.pixel-bar-container{width:80%;max-width:300px;padding:4px;background:#000;border:2px solid var(--sys-blue);box-shadow:4px 4px 0 rgba(0,210,255,0.2);position:relative;margin:15px 0;display:none}
+.pixel-bar-fill{height:18px;background:var(--sys-blue);width:0%;transition:width .1s linear}
+.pixel-bar-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',monospace;font-weight:bold;font-size:.9rem;color:#fff;text-shadow:1px 1px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000}
+@keyframes shakeRage{0%{transform:translate(1px,1px) rotate(0deg)}25%{transform:translate(-1px,-1px) rotate(-0.5deg)}50%{transform:translate(-1px,1px) rotate(0.5deg)}75%{transform:translate(1px,-1px) rotate(0deg)}100%{transform:translate(1px,1px) rotate(0deg)}}
+@keyframes fireGradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.fx-fire{background:rgba(15,5,5,0.95)!important;border-left-color:#ff2a00!important;border-right-color:#ff2a00!important;box-shadow:inset 0 0 20px rgba(255,42,0,0.15);animation:shakeRage .3s infinite}
+.fx-fire .name-label{background:linear-gradient(90deg,#ff0000,#ff7b00,#ff0000);background-size:200% 200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:fireGradient 2s ease infinite;text-shadow:0 0 10px rgba(255,0,0,0.4)}
+@keyframes glitchAnim{0%{clip-path:inset(20% 0 80% 0);transform:translate(-2px,2px)}20%{clip-path:inset(60% 0 10% 0);transform:translate(2px,-2px)}40%{clip-path:inset(40% 0 50% 0);transform:translate(-2px,2px)}60%{clip-path:inset(80% 0 5% 0);transform:translate(2px,-2px)}80%{clip-path:inset(10% 0 70% 0);transform:translate(-2px,2px)}100%{clip-path:inset(30% 0 50% 0);transform:translate(0)}}
+.fx-toxic{background:rgba(5,15,5,0.95)!important;border-left-color:#00ff00!important;border-right-color:#00ff00!important;border-style:dashed}
+.fx-toxic .name-label{color:#00ff00;text-shadow:2px 0 0 #ff00ff,-2px 0 0 #00ffff;animation:glitchAnim 2s infinite linear alternate-reverse}
+@keyframes glowPulse{0%{text-shadow:0 0 5px #ff69b4}50%{text-shadow:0 0 20px #ff69b4,0 0 30px #da70d6}100%{text-shadow:0 0 5px #ff69b4}}
+.fx-love{background:rgba(20,10,15,0.95)!important;border-left-color:#ff69b4!important;border-right-color:#ff69b4!important}
+.fx-love .name-label{color:#ffb6c1;animation:glowPulse 2s infinite}
+@keyframes shiverCold{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-1px)}40%,80%{transform:translateX(1px)}}
+.fx-cold{background:rgba(5,15,20,0.95)!important;border-left-color:#00ffff!important;border-right-color:#00ffff!important;animation:shiverCold 3s infinite}
+.fx-cold .name-label{color:#e0f7fa;text-shadow:0 0 8px #00ffff,0 0 15px #00bfff}
+@keyframes sickRipple{0%,100%{opacity:1}50%{opacity:.7}}
+.fx-sick{background:rgba(15,20,5,0.95)!important;border-color:#8bc34a!important}
+.fx-sick .name-label{color:#cddc39;text-shadow:0 0 5px #8bc34a;animation:sickRipple 3s infinite}
+@keyframes goldShine{0%{background-position:200% center}100%{background-position:-200% center}}
+.fx-gold{background:rgba(10,10,0,0.95)!important;border-color:#ffd700!important}
+.fx-gold .name-label{color:#ffd700;text-shadow:0 0 10px #ffae00;animation:goldShine 3s linear infinite}
+@keyframes partyColors{0%{border-color:#ff0000}33%{border-color:#00ff00}66%{border-color:#0000ff}100%{border-color:#ff0000}}
+.fx-party{background:rgba(10,10,15,0.95)!important;border-width:2px!important;animation:partyColors 1s infinite}
+.fx-party .name-label{color:#ffaa00;text-shadow:0 0 8px #ff00ff}
+@keyframes shockShake{0%,100%{transform:translate(0,0)}25%{transform:translate(-2px,1px)}50%{transform:translate(2px,-1px)}75%{transform:translate(-1px,-2px)}}
+.fx-shock{background:rgba(20,10,0,0.95)!important;border-color:#ffaa00!important;animation:shockShake .2s infinite}
+.fx-shock .name-label{color:#ffea00;text-shadow:0 0 10px #ff0000}
+</style>
 </head>
 <body>
-    
-    <div id="bg-overlay"></div>
-    <audio id="globalAudioPlayer" loop preload="auto"></audio>
-    
-    <div id="syncOverlay" style="display: none;">
-        <div class="font-sys text-[var(--sys-blue)] text-2xl font-bold" id="overlayText">INICIALIZANDO</div>
-        <div class="pixel-bar-container" id="pixelBarContainer">
-            <div class="pixel-bar-fill" id="pixelBarFill"></div>
-            <div class="pixel-bar-text" id="pixelBarText">0%</div>
-        </div>
-        <div class="text-gray-500 text-sm mt-2 font-mono" id="overlaySubtext">Por favor espere...</div>
+<div id="bg-overlay"></div>
+<audio id="globalAudioPlayer" loop></audio>
+<div id="syncOverlay">
+    <div class="font-sys text-[var(--sys-blue)] text-2xl font-bold" id="overlayText">INICIALIZANDO</div>
+    <div class="pixel-bar-container" id="pixelBarContainer">
+        <div class="pixel-bar-fill" id="pixelBarFill"></div>
+        <div class="pixel-bar-text" id="pixelBarText">0%</div>
     </div>
-
-    <header class="px-2 solid-panel shrink-0 flex justify-between items-center w-full">
-        <h1 class="text-lg font-bold text-white font-sys flex items-center gap-2 shrink-0">
-            AETHER <span class="text-[var(--sys-blue)] font-normal text-xs opacity-70 hidden md:inline">| V28.0_STABLE</span>
-        </h1>
-        <div class="flex gap-1 justify-end items-center flex-wrap sm:flex-nowrap">
-            <button id="zoomOutBtn" class="sys-btn icon-btn" title="Achicar">A-</button>
-            <button id="zoomInBtn" class="sys-btn icon-btn" title="Agrandar">A+</button>
-            <button id="playBtn" class="sys-btn play-btn icon-btn" title="Simulador">▶️</button>
-            <button id="recordBtn" class="sys-btn rec-btn icon-btn" title="Grabar Pantalla">🎥</button>
-            <button id="fullscreenBtn" class="sys-btn fs-btn icon-btn hidden" title="Pantalla Completa">⛶</button>
-            <button id="toggleMusicBtn" class="sys-btn icon-btn hidden" style="border-color:#00ff88;color:#00ff88" title="Música">🎵</button>
-            <button id="addMoreBtn" class="sys-btn icon-btn hidden" title="Añadir Datos">➕</button>
-            <button id="toggleSettingsBtn" class="sys-btn icon-btn hidden" title="Ajustes">⚙️</button>
+    <div class="text-gray-500 text-sm mt-2 font-mono" id="overlaySubtext">Por favor espere...</div>
+</div>
+<header class="px-4 solid-panel shrink-0 flex justify-between items-center w-full">
+    <h1 class="text-lg font-bold text-white font-sys flex items-center gap-2">AETHER <span class="text-[var(--sys-blue)] font-normal text-sm opacity-70 hidden md:inline">| V27.2_REC_FIX</span></h1>
+    <div class="flex gap-2">
+        <button id="recordBtn" class="sys-btn rec-btn" title="Grabar Pantalla">🎥 REC</button>
+        <button id="fullscreenBtn" class="sys-btn fs-btn font-sys hidden" title="Pantalla Completa">[ ]</button>
+        <button id="toggleMusicBtn" class="sys-btn font-sys hidden" style="border-color:#00ff88;color:#00ff88" title="Música">🎵</button>
+        <button id="addMoreBtn" class="sys-btn font-sys hidden">+ DATOS</button>
+        <button id="toggleSettingsBtn" class="sys-btn font-sys hidden">AJUSTES</button>
+    </div>
+</header>
+<div id="settingsModal">
+    <div class="modal-content">
+        <div class="p-3 border-b border-[#333] flex justify-between items-center bg-[#05070a]">
+            <h2 class="text-sm font-sys text-[var(--sys-blue)] font-bold">PANEL OMNI_CORE</h2>
+            <button id="closeModalBtn" class="text-gray-500 hover:text-white text-xl font-mono px-2">X</button>
         </div>
-    </header>
-
-    <div id="settingsModal" style="display: none;">
-        <div class="modal-content">
-            <div class="p-3 border-b border-[#333] flex justify-between items-center bg-[#05070a]">
-                <h2 class="text-sm font-sys text-[var(--sys-blue)] font-bold">PANEL OMNI_CORE</h2>
-                <button id="closeModalBtn" class="text-gray-500 hover:text-white text-xl font-mono px-2">X</button>
-            </div>
-            
-            <div class="p-4 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 bg-[#0a0d14]">
-                
-                <div class="flex flex-col gap-3">
-                    <div class="bg-[#05070a] p-3 border border-[#333] border-l-2 border-l-[var(--sys-alert)]">
-                        <h3 class="text-[10px] font-sys text-[var(--sys-alert)] mb-1 font-bold">SALTO TEMPORAL</h3>
-                        <select id="jumpDateSelect" class="sys-select mb-2">
-                            <option value="">[ SELECCIONAR FECHA ]</option>
-                        </select>
-                        <button id="jumpBtn" class="sys-btn w-full" style="border-color:var(--sys-alert);color:var(--sys-alert)">EJECUTAR SALTO</button>
-                    </div>
-                    
-                    <div class="flex flex-col gap-2 bg-[#05070a] p-3 border border-[#333]">
-                        <h3 class="text-[10px] font-sys text-[var(--sys-blue)] mb-1">FILTROS GLOBALES</h3>
-                        
-                        <div class="flex gap-1 mb-1">
-                            <input type="text" id="searchInput" placeholder="Buscar texto..." class="sys-input flex-1">
-                            <button id="searchPrevBtn" class="sys-btn px-2" title="Anterior">↑</button>
-                            <button id="searchNextBtn" class="sys-btn px-2" title="Siguiente">↓</button>
-                        </div>
-                        <div id="searchMatchCount" class="text-[9px] text-gray-400 font-mono mb-2 text-right hidden">0/0</div>
-
-                        <select id="filterSelect" class="sys-select">
-                            <option value="all">TODOS LOS MENSAJES</option>
-                            <option value="photo">SOLO IMÁGENES</option>
-                            <option value="sticker">SOLO STICKERS</option>
-                            <option value="video">SOLO VIDEOS</option>
-                            <option value="audio">SOLO AUDIOS</option>
-                        </select>
-                        
-                        <div class="grid grid-cols-2 gap-2 mt-1">
-                            <div>
-                                <label class="text-[9px] text-gray-500">DESDE</label>
-                                <input type="date" id="dateStart" class="sys-input px-1">
-                            </div>
-                            <div>
-                                <label class="text-[9px] text-gray-500">HASTA</label>
-                                <input type="date" id="dateEnd" class="sys-input px-1">
-                            </div>
-                        </div>
+        <div class="p-4 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 bg-[#0a0d14]">
+            <div class="flex flex-col gap-3">
+                <div class="bg-[#05070a] p-3 border border-[#333] border-l-2 border-l-[var(--sys-alert)]">
+                    <h3 class="text-[10px] font-sys text-[var(--sys-alert)] mb-1 font-bold">SALTO TEMPORAL</h3>
+                    <select id="jumpDateSelect" class="sys-select mb-2"><option value="">[ SELECCIONAR FECHA ]</option></select>
+                    <button id="jumpBtn" class="sys-btn w-full" style="border-color:var(--sys-alert);color:var(--sys-alert)">EJECUTAR SALTO</button>
+                </div>
+                <div class="flex flex-col gap-2 bg-[#05070a] p-3 border border-[#333]">
+                    <h3 class="text-[10px] font-sys text-[var(--sys-blue)] mb-1">FILTROS GLOBALES</h3>
+                    <input type="text" id="searchInput" placeholder="Buscar texto (Presiona Enter)..." class="sys-input">
+                    <select id="filterSelect" class="sys-select">
+                        <option value="all">TODOS LOS MENSAJES</option>
+                        <option value="photo">SOLO IMÁGENES</option>
+                        <option value="sticker">SOLO STICKERS</option>
+                        <option value="video">SOLO VIDEOS</option>
+                        <option value="audio">SOLO AUDIOS</option>
+                    </select>
+                    <div class="grid grid-cols-2 gap-2 mt-1">
+                        <div><label class="text-[9px] text-gray-500">DESDE</label><input type="date" id="dateStart" class="sys-input px-1"></div>
+                        <div><label class="text-[9px] text-gray-500">HASTA</label><input type="date" id="dateEnd" class="sys-input px-1"></div>
                     </div>
                 </div>
-
-                <div class="flex flex-col gap-3">
-                    <div class="bg-[#05070a] p-3 border border-[#333] border-l-2 border-l-[#00ff88]">
-                        <h3 class="text-[10px] font-sys text-[#00ff88] mb-1 font-bold">CONTADOR DE PALABRAS</h3>
-                        <div class="flex gap-2 mb-2">
-                            <input type="text" id="countInput" placeholder="Palabra o frase..." class="sys-input flex-1">
-                            <button id="countBtn" class="sys-btn" style="border-color:#00ff88;color:#00ff88">CONTAR</button>
-                        </div>
-                        <div id="countResult" class="text-[10px] text-gray-300 font-mono mt-2 bg-black p-2 rounded hidden"></div>
-                    </div>
-                    
-                    <div class="bg-[#05070a] p-3 border border-[#333]">
-                        <h3 class="text-[10px] font-sys text-white mb-1">FONDO VISUAL (JPG/GIF)</h3>
-                        <input type="file" id="bgInput" accept="image/*" class="sys-input text-[9px] mb-1 p-1">
-                        <button id="clearBgBtn" class="text-[9px] text-gray-500 hover:text-white">X QUITAR FONDO</button>
-                    </div>
-                    
-                    <div class="bg-[#05070a] p-3 border border-[#333]">
-                        <h3 class="text-[10px] font-sys text-[#a855f7] mb-1">MÚSICA DE FONDO (MP3/WAV)</h3>
-                        <input type="file" id="musicInput" accept="audio/*" class="sys-input text-[9px] mb-1 p-1">
-                        <button id="clearMusicBtn" class="text-[9px] text-gray-500 hover:text-white">X QUITAR MÚSICA</button>
-                    </div>
-                    
-                    <button id="purgeBtn" class="sys-btn w-full mt-auto" style="border-color:red;color:red;background:rgba(255,0,0,0.1)">⚠️ BORRAR MEMORIA (RESET)</button>
-                </div>
-
-                <div class="flex flex-col">
-                    <h3 class="text-xs font-sys text-white mb-2">MATRIZ DE IDENTIDAD (ALIAS Y POSICIÓN)</h3>
-                    <div id="identityMatrix" class="flex-1 bg-[#000] border border-[#333] overflow-y-auto max-h-[45vh] md:max-h-full"></div>
-                </div>
             </div>
-            
-            <div class="p-3 border-t border-[#333] flex justify-end bg-[#05070a]">
-                <button id="applyMappingBtn" class="sys-btn font-sys">GUARDAR Y RENDERIZAR</button>
+            <div class="flex flex-col gap-3">
+                <div class="bg-[#05070a] p-3 border border-[#333] border-l-2 border-l-[#00ff88]">
+                    <h3 class="text-[10px] font-sys text-[#00ff88] mb-1 font-bold">CONTADOR DE PALABRAS</h3>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="countInput" placeholder="Palabra o frase..." class="sys-input flex-1">
+                        <button id="countBtn" class="sys-btn" style="border-color:#00ff88;color:#00ff88">CONTAR</button>
+                    </div>
+                    <div id="countResult" class="text-[10px] text-gray-300 font-mono mt-2 bg-black p-2 rounded hidden"></div>
+                </div>
+                <div class="bg-[#05070a] p-3 border border-[#333]">
+                    <h3 class="text-[10px] font-sys text-white mb-1">FONDO VISUAL (JPG/GIF)</h3>
+                    <input type="file" id="bgInput" accept="image/*" class="sys-input text-[9px] mb-1 p-1">
+                    <button id="clearBgBtn" class="text-[9px] text-gray-500 hover:text-white">X QUITAR FONDO</button>
+                </div>
+                <div class="bg-[#05070a] p-3 border border-[#333]">
+                    <h3 class="text-[10px] font-sys text-[#a855f7] mb-1">MÚSICA DE FONDO (MP3/WAV)</h3>
+                    <input type="file" id="musicInput" accept="audio/*" class="sys-input text-[9px] mb-1 p-1">
+                    <button id="clearMusicBtn" class="text-[9px] text-gray-500 hover:text-white">X QUITAR MÚSICA</button>
+                </div>
+                <button id="purgeBtn" class="sys-btn w-full mt-auto" style="border-color:red;color:red;background:rgba(255,0,0,0.1)">⚠️ BORRAR MEMORIA (RESET)</button>
+            </div>
+            <div class="flex flex-col">
+                <h3 class="text-xs font-sys text-white mb-2">MATRIZ DE IDENTIDAD (ALIAS Y POSICIÓN)</h3>
+                <div id="identityMatrix" class="flex-1 bg-[#000] border border-[#333] overflow-y-auto max-h-[45vh] md:max-h-full"></div>
             </div>
         </div>
-    </div>
-
-    <div class="main-container">
-        
-        <input type="file" id="filesInput" multiple accept=".zip,.txt,image/*,video/*,audio/*,.webp" class="hidden">
-        
-        <div id="loaderUI" class="flex items-center justify-center p-4 z-10 w-full h-[80vh]">
-            <div class="drop-zone solid-panel p-6 text-center w-full max-w-lg cursor-pointer" onclick="document.getElementById('filesInput').click()">
-                <h2 class="text-xl font-sys font-bold text-[var(--sys-blue)] mb-1">SISTEMA INACTIVO</h2>
-                <p class="text-gray-400 text-xs mb-4">Toque aquí para cargar sus archivos.<br>(Los datos se guardan permanentemente)</p>
-            </div>
+        <div class="p-3 border-t border-[#333] flex justify-end bg-[#05070a]">
+            <button id="applyMappingBtn" class="sys-btn font-sys">GUARDAR Y RENDERIZAR</button>
         </div>
-        
-        <main id="chatUI" style="display: none;">
-            <div id="messagesDiv" class="max-w-4xl mx-auto flex flex-col pb-10 pt-2 w-full px-2"></div>
-        </main>
-        
     </div>
-
-    <script src="engine.js"></script>
-    <script src="app.js"></script>
-
+</div>
+<div class="main-container">
+    <input type="file" id="filesInput" multiple accept=".zip,.txt,image/*,video/*,audio/*,.webp" class="hidden">
+    <div id="loaderUI" class="flex items-center justify-center p-4 z-10 w-full h-[80vh]">
+        <div class="drop-zone solid-panel p-6 text-center w-full max-w-lg cursor-pointer" onclick="document.getElementById('filesInput').click()">
+            <h2 class="text-xl font-sys font-bold text-[var(--sys-blue)] mb-1">SISTEMA INACTIVO</h2>
+            <p class="text-gray-400 text-xs mb-4">Toque aquí para cargar sus archivos.<br>(Los datos se guardan permanentemente)</p>
+        </div>
+    </div>
+    <main id="chatUI" class="hidden">
+        <div id="messagesDiv" class="max-w-4xl mx-auto flex flex-col pb-10 pt-2 w-full px-2"></div>
+    </main>
+</div>
+<script src="app.js"></script>
+<script src="engine.js"></script>
 </body>
 </html>
