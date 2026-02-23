@@ -1,41 +1,32 @@
 /* ==========================================================================
-   VARIABLES GLOBALES (El núcleo estético)
+   AETHER NEXUS // CORE V28_STABLE - ESTILOS VISUALES (style.css)
    ========================================================================== */
+
 :root {
     --bg-void: #05070a;
     --sys-blue: #00d2ff;
     --sys-alert: #ff2a5f;
     --solid-panel: #0a0d14;
     --sys-border: rgba(0, 210, 255, 0.2);
-    /* Variable mágica para el control de Zoom Dinámico */
-    --chat-scale: 0.85rem; 
+    --chat-scale: 0.85rem;
 }
 
-/* ==========================================================================
-   ESTRUCTURA BASE Y FONDOS
-   ========================================================================== */
 html, body {
     background-color: var(--bg-void);
     color: #e2e8f0;
     font-family: 'Inter', sans-serif;
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    min-height: 100vh;
-    /* Fondo fijo mientras el contenido baja, clave para rendimiento */
+    margin: 0; padding: 0;
+    width: 100%; min-height: 100vh;
     background-attachment: fixed;
     background-size: cover;
     background-position: center;
     overflow-x: hidden;
-    scroll-behavior: smooth;
 }
 
 #bg-overlay {
-    position: fixed;
-    inset: 0;
+    position: fixed; inset: 0;
     background: rgba(5, 7, 10, 0.85);
-    z-index: -1;
-    pointer-events: none;
+    z-index: -1; pointer-events: none;
 }
 
 .font-sys {
@@ -44,9 +35,17 @@ html, body {
     letter-spacing: 0.05em;
 }
 
-/* ==========================================================================
-   COMPONENTES UI (Botones, Inputs, Paneles)
-   ========================================================================== */
+/* --- BARRA SUPERIOR FIJA --- */
+header {
+    position: fixed;
+    top: 0; 
+    left: 0; 
+    right: 0;
+    z-index: 50;
+    height: 30px;
+}
+
+/* --- UI COMPONENTS --- */
 .solid-panel {
     background: var(--solid-panel);
     border-bottom: 1px solid var(--sys-border);
@@ -56,49 +55,38 @@ html, body {
     background: #0f172a;
     border: 1px solid var(--sys-blue);
     color: var(--sys-blue);
-    padding: 6px 12px;
+    padding: 6px 14px;
     border-radius: 4px;
     cursor: pointer;
     font-weight: 600;
     font-size: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    transition: all 0.1s ease-in-out;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: all .1s;
 }
 
-.sys-btn:active {
-    transform: scale(0.95);
-}
-
-.fs-btn {
-    border-color: #a855f7;
-    color: #a855f7;
-}
-
-.fs-btn:hover {
-    background: #a855f7;
-    color: #000;
-}
-
-/* Animación especial para el botón PLAY del simulador */
-.play-btn {
-    border-color: #00ff88;
-    color: #00ff88;
+/* Modificador para botones de ícono (Más compactos) */
+.icon-btn {
+    padding: 6px 8px;
     font-size: 1rem;
+    min-width: 34px; /* Asegura que no se aplasten demasiado */
 }
 
-.play-btn.playing {
-    background: #00ff88;
-    color: #000;
-    animation: pulsePlay 1s infinite alternate;
-}
+.sys-btn:active { transform: scale(.98); }
 
-@keyframes pulsePlay {
-    from { box-shadow: 0 0 5px #00ff88; }
-    to { box-shadow: 0 0 15px #00ff88; }
+.fs-btn { border-color: #a855f7; color: #a855f7; }
+.fs-btn:hover { background: #a855f7; color: #000; }
+
+.play-btn { border-color: #00ff88; color: #00ff88; }
+.play-btn.playing { background: #00ff88; color: #000; box-shadow: 0 0 10px #00ff88; }
+
+.rec-btn { border-color: #ff2a5f; color: #ff2a5f; }
+.rec-btn.recording {
+    background: #ff2a5f;
+    color: #fff;
+    box-shadow: 0 0 10px #ff2a5f;
+    animation: pulseRec 1s infinite;
 }
+@keyframes pulseRec { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
 .sys-input, .sys-select {
     background: #000;
@@ -113,295 +101,110 @@ html, body {
     font-size: 0.75rem;
 }
 
-.drop-zone {
-    border: 1px dashed var(--sys-blue);
-    background: #0a0d14;
-    border-radius: 8px;
-    margin: 20px;
-}
-
-/* ==========================================================================
-   LAYOUT PRINCIPAL (Header y Modal)
-   ========================================================================== */
-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 50;
-    height: 55px;
-}
-
-.main-container {
-    padding-top: 65px;
-    width: 100%;
-}
-
 #settingsModal {
-    position: fixed;
-    inset: 0;
+    position: fixed; inset: 0;
     background: rgba(0, 0, 0, 0.95);
     z-index: 60;
-    display: none;
-    align-items: center;
-    justify-content: center;
+    align-items: center; justify-content: center;
 }
 
 .modal-content {
-    width: 95%;
-    max-width: 1000px;
-    max-height: 90vh;
-    display: flex;
-    flex-direction: column;
+    width: 95%; max-width: 1000px; max-height: 90vh;
+    display: flex; flex-direction: column;
     border-top: 2px solid var(--sys-blue);
-    border-radius: 8px;
-    background: #0a0d14;
+    border-radius: 8px; background: #0a0d14;
 }
 
-/* ==========================================================================
-   MATRIZ DE IDENTIDAD (Radios y Filas)
-   ========================================================================== */
-.identity-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr auto;
-    gap: 8px;
-    align-items: center;
-    padding: 6px 8px;
-    border-bottom: 1px solid #1a1a1a;
-}
+/* --- CHAT Y BURBUJAS --- */
+.main-container { padding-top: 75px; width: 100%; }
 
-.radio-group {
-    display: flex;
-    gap: 2px;
-    background: #000;
-    padding: 3px;
-    border-radius: 4px;
-    border: 1px solid #333;
-}
-
-.radio-label {
-    cursor: pointer;
-    padding: 4px 10px;
-    font-size: 0.65rem;
-    font-weight: 600;
-    color: #666;
-    border-radius: 2px;
-}
-
-.radio-input:checked + .radio-label.left-side {
-    background: #331018;
-    color: var(--sys-alert);
-}
-
-.radio-input:checked + .radio-label.right-side {
-    background: #0a2030;
-    color: var(--sys-blue);
-}
-
-.radio-input {
-    display: none;
-}
-
-/* ==========================================================================
-   SISTEMA DE BURBUJAS DE CHAT (Escala Dinámica)
-   ========================================================================== */
 .msg-container {
-    margin-bottom: 0.8rem;
+    margin-bottom: 0.5rem;
     max-width: 85%;
     word-wrap: break-word;
     display: flex;
     flex-direction: column;
-    transition: opacity 0.3s, transform 0.3s;
+    content-visibility: auto; 
+    contain-intrinsic-size: 100px;
 }
 
 .msg-wrapper {
-    /* La magia del zoom: los paddings y tamaños responden a --chat-scale */
-    padding: calc(var(--chat-scale) * 0.6) calc(var(--chat-scale) * 1);
+    padding: 8px 12px;
     background: #0d121c;
     border: 1px solid #1f2937;
     position: relative;
     font-size: var(--chat-scale);
-    transition: all 0.3s;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     will-change: transform;
 }
 
-.msg-left {
-    align-items: flex-start;
-    margin-right: auto;
-}
+.msg-left { align-items: flex-start; margin-right: auto; }
+.msg-left .msg-wrapper { border-left: 3px solid var(--sys-alert); border-radius: 0 8px 8px 8px; }
 
-.msg-left .msg-wrapper {
-    border-left: 3px solid var(--sys-alert);
-    border-radius: 0 12px 12px 12px;
-}
-
-.msg-right {
-    align-items: flex-end;
-    margin-left: auto;
-}
-
-.msg-right .msg-wrapper {
-    border-right: 3px solid var(--sys-blue);
-    border-radius: 12px 0 12px 12px;
-}
-
-/* Animación base de respiración para los nombres */
-@keyframes nameFloatBase {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-1.5px); }
-}
+.msg-right { align-items: flex-end; margin-left: auto; }
+.msg-right .msg-wrapper { border-right: 3px solid var(--sys-blue); border-radius: 8px 0 8px 8px; }
 
 .name-label {
     font-family: 'Rajdhani', sans-serif;
-    font-size: calc(var(--chat-scale) * 0.9);
+    font-size: 0.85rem;
     font-weight: 700;
-    margin-bottom: 3px;
-    display: inline-block;
-    animation: nameFloatBase 3s ease-in-out infinite;
-    transition: all 0.3s ease;
+    margin-bottom: 2px;
 }
-
 .msg-left .name-label { color: var(--sys-alert); }
 .msg-right .name-label { color: var(--sys-blue); }
 
-.timestamp {
-    font-size: calc(var(--chat-scale) * 0.7);
-    color: #64748b;
-    margin-top: 4px;
-    text-align: right;
-}
+.timestamp { font-size: 0.65rem; color: #64748b; margin-top: 2px; text-align: right; }
 
-/* Separadores de Fecha */
 .date-divider {
-    text-align: center;
-    margin: 1.5rem 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    scroll-margin-top: 70px;
-    transition: opacity 0.5s;
+    text-align: center; margin: 1rem 0; display: flex;
+    align-items: center; justify-content: center; scroll-margin-top: 80px; 
 }
-
 .date-divider span {
-    background: #000;
-    border: 1px solid #333;
-    padding: 4px 16px;
-    border-radius: 16px;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: calc(var(--chat-scale) * 0.8);
-    color: #94a3b8;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    background: #000; border: 1px solid #333; padding: 2px 12px;
+    border-radius: 12px; font-family: 'Rajdhani', sans-serif;
+    font-size: 0.75rem; color: #94a3b8; transition: all 0.3s;
 }
 
-/* Manejo de Multimedia (También escalable) */
-.media-file {
-    max-width: 100%;
-    max-height: calc(var(--chat-scale) * 15);
-    object-fit: contain;
-    border-radius: 6px;
-    margin-top: 6px;
-    background: #000;
-    transition: max-height 0.3s;
-}
+/* --- MULTIMEDIA --- */
+.media-file { max-width: 100%; max-height: 250px; object-fit: contain; border-radius: 4px; margin-top: 4px; background: #000; }
+.sticker-file { max-width: 120px; max-height: 120px; object-fit: contain; margin-top: 2px; }
+.drop-zone { border: 1px dashed var(--sys-blue); background: #0a0d14; border-radius: 8px; margin: 20px; }
 
-.sticker-file {
-    max-width: calc(var(--chat-scale) * 8);
-    max-height: calc(var(--chat-scale) * 8);
-    object-fit: contain;
-    margin-top: 4px;
-    transition: all 0.3s;
-}
+/* --- SYNC OVERLAY --- */
+#syncOverlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
+.pixel-bar-container { width: 80%; max-width: 300px; padding: 4px; background: #000; border: 2px solid var(--sys-blue); box-shadow: 4px 4px 0 rgba(0, 210, 255, 0.2); position: relative; margin: 15px 0; }
+.pixel-bar-fill { height: 18px; background: var(--sys-blue); width: 0%; transition: width .1s linear; }
+.pixel-bar-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Rajdhani', monospace; font-weight: bold; font-size: .9rem; color: #fff; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; }
+
+.sim-hidden { opacity: 0; transform: translateY(20px); pointer-events: none; transition: all 0.3s ease; }
+
 
 /* ==========================================================================
-   BARRA DE PROGRESO Y OVERLAYS
-   ========================================================================== */
-#syncOverlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 100;
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.pixel-bar-container {
-    width: 80%;
-    max-width: 300px;
-    padding: 4px;
-    background: #000;
-    border: 2px solid var(--sys-blue);
-    box-shadow: 4px 4px 0 rgba(0, 210, 255, 0.2);
-    position: relative;
-    margin: 15px 0;
-    display: none;
-}
-
-.pixel-bar-fill {
-    height: 18px;
-    background: var(--sys-blue);
-    width: 0%;
-    transition: width 0.1s linear;
-}
-
-.pixel-bar-text {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Rajdhani', monospace;
-    font-weight: bold;
-    font-size: 0.9rem;
-    color: #fff;
-    text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
-}
-
-/* Utilidad para el Modo Reproductor (Simulador) */
-.sim-hidden {
-    opacity: 0;
-    transform: translateY(20px);
-    pointer-events: none;
-}
-
-/* ==========================================================================
-   MOTOR DE VFX (OVERDRIVE) - EFECTOS EXTREMOS
+   VFX ENGINE (CON ANTI-LAG .in-view)
    ========================================================================== */
 
-/* 1. ESTADO FUEGO / IRA */
+/* 1. FX FIRE (Fuego / Odio) */
 @keyframes shakeRage {
-    0% { transform: translate(1px, 1px) rotate(0deg); }
+    0%, 100% { transform: translate(1px, 1px) rotate(0deg); }
     25% { transform: translate(-1px, -1px) rotate(-0.5deg); }
     50% { transform: translate(-1px, 1px) rotate(0.5deg); }
     75% { transform: translate(1px, -1px) rotate(0deg); }
-    100% { transform: translate(1px, 1px) rotate(0deg); }
 }
-
 @keyframes fireGradient {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
 }
-
-.fx-fire {
-    border-left-color: #ff2a00 !important;
-    border-right-color: #ff2a00 !important;
-    box-shadow: inset 0 0 20px rgba(255, 42, 0, 0.15);
-    animation: shakeRage 0.3s infinite;
-}
-
+.fx-fire { background: rgba(15, 5, 5, 0.95) !important; border-left-color: #ff2a00 !important; border-right-color: #ff2a00 !important; }
 .fx-fire .name-label {
     background: linear-gradient(90deg, #ff0000, #ff7b00, #ff0000);
-    background-size: 200% 200%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: fireGradient 2s ease infinite;
-    text-shadow: 0px 0px 10px rgba(255, 0, 0, 0.4);
+    background-size: 200% 200%; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.4);
 }
+.fx-fire.in-view { animation: shakeRage .3s infinite; box-shadow: inset 0 0 20px rgba(255, 42, 0, 0.15); }
+.fx-fire.in-view .name-label { animation: fireGradient 2s ease infinite; }
 
-/* 2. ESTADO TOXICO / GLITCH / IRONÍA */
+
+/* 2. FX TOXIC (Sarcasmo / Payaso) */
 @keyframes glitchAnim {
     0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 2px); }
     20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -2px); }
@@ -410,54 +213,73 @@ header {
     80% { clip-path: inset(10% 0 70% 0); transform: translate(-2px, 2px); }
     100% { clip-path: inset(30% 0 50% 0); transform: translate(0); }
 }
+.fx-toxic { background: rgba(5, 15, 5, 0.95) !important; border-left-color: #00ff00 !important; border-right-color: #00ff00 !important; border-style: dashed; }
+.fx-toxic .name-label { color: #00ff00; text-shadow: 2px 0 0 #ff00ff, -2px 0 0 #00ffff; }
+.fx-toxic.in-view .name-label { animation: glitchAnim 2s infinite linear alternate-reverse; }
 
-.fx-toxic {
-    border-left-color: #00ff00 !important;
-    border-right-color: #00ff00 !important;
-    border-style: dashed;
-}
 
-.fx-toxic .name-label {
-    color: #00ff00;
-    text-shadow: 2px 0px 0px #ff00ff, -2px 0px 0px #00ffff;
-    animation: glitchAnim 2s infinite linear alternate-reverse;
-}
-
-/* 3. ESTADO MAGIA / AMOR */
+/* 3. FX LOVE (Amor / Glow) */
 @keyframes glowPulse {
-    0% { text-shadow: 0 0 5px #ff69b4; transform: scale(1); }
-    50% { text-shadow: 0 0 20px #ff69b4, 0 0 30px #da70d6; transform: scale(1.05); }
-    100% { text-shadow: 0 0 5px #ff69b4; transform: scale(1); }
+    0%, 100% { text-shadow: 0 0 5px #ff69b4; }
+    50% { text-shadow: 0 0 20px #ff69b4, 0 0 30px #da70d6; }
 }
+.fx-love { background: rgba(20, 10, 15, 0.95) !important; border-left-color: #ff69b4 !important; border-right-color: #ff69b4 !important; }
+.fx-love .name-label { color: #ffb6c1; }
+.fx-love.in-view .name-label { animation: glowPulse 2s infinite; }
 
-.fx-love {
-    border-left-color: #ff69b4 !important;
-    border-right-color: #ff69b4 !important;
-    background: linear-gradient(135deg, rgba(255,105,180,0.05), transparent) !important;
-}
 
-.fx-love .name-label {
-    color: #ffb6c1;
-    animation: glowPulse 2s infinite;
-}
-
-/* 4. ESTADO FRÍO / TRISTEZA */
+/* 4. FX COLD (Frío / Triste) */
 @keyframes shiverCold {
     0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-2px); }
-    40%, 80% { transform: translateX(2px); }
+    20%, 60% { transform: translateX(-1px); }
+    40%, 80% { transform: translateX(1px); }
 }
+.fx-cold { background: rgba(5, 15, 20, 0.95) !important; border-left-color: #00ffff !important; border-right-color: #00ffff !important; }
+.fx-cold .name-label { color: #e0f7fa; text-shadow: 0 0 8px #00ffff, 0 0 15px #00bfff; }
+.fx-cold.in-view { animation: shiverCold 3s infinite; }
 
-.fx-cold {
-    border-left-color: #00ffff !important;
-    border-right-color: #00ffff !important;
-    background: linear-gradient(180deg, rgba(0,255,255,0.05), rgba(0,0,0,0)) !important;
-    animation: shiverCold 3s infinite;
+
+/* 5. FX SICK (Asco / Enfermo) */
+@keyframes sickRipple {
+    0%, 100% { opacity: 1; filter: hue-rotate(0deg); }
+    50% { opacity: .7; filter: hue-rotate(20deg); }
 }
+.fx-sick { background: rgba(15, 20, 5, 0.95) !important; border-color: #8bc34a !important; }
+.fx-sick .name-label { color: #cddc39; text-shadow: 0 0 5px #8bc34a; }
+.fx-sick.in-view .name-label { animation: sickRipple 3s infinite; }
 
-.fx-cold .name-label {
-    color: #e0f7fa;
-    text-shadow: 0 0 8px #00ffff, 0 0 15px #00bfff;
+
+/* 6. FX GOLD (Dinero / Oro) */
+@keyframes goldShine {
+    0% { background-position: 200% center; }
+    100% { background-position: -200% center; }
 }
+.fx-gold { background: rgba(10, 10, 0, 0.95) !important; border-color: #ffd700 !important; }
+.fx-gold .name-label {
+    background: linear-gradient(90deg, #ffd700, #fff, #ffd700);
+    background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 10px rgba(255, 174, 0, 0.5);
+}
+.fx-gold.in-view .name-label { animation: goldShine 3s linear infinite; }
 
 
+/* 7. FX PARTY (Fiesta / RGB) */
+@keyframes partyColors {
+    0% { border-color: #ff0000; } 33% { border-color: #00ff00; }
+    66% { border-color: #0000ff; } 100% { border-color: #ff0000; }
+}
+.fx-party { background: rgba(10, 10, 15, 0.95) !important; border-width: 2px !important; }
+.fx-party .name-label { color: #ffaa00; text-shadow: 0 0 8px #ff00ff; }
+.fx-party.in-view { animation: partyColors 1s infinite; }
+
+
+/* 8. FX SHOCK (Susto / Impacto) */
+@keyframes shockShake {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(-2px, 1px); }
+    50% { transform: translate(2px, -1px); }
+    75% { transform: translate(-1px, -2px); }
+}
+.fx-shock { background: rgba(20, 10, 0, 0.95) !important; border-color: #ffaa00 !important; }
+.fx-shock .name-label { color: #ffea00; text-shadow: 0 0 10px #ff0000; }
+.fx-shock.in-view { animation: shockShake .2s infinite; }
