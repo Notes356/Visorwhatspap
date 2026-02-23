@@ -112,19 +112,24 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:55px}
                     <button id="jumpBtn" class="sys-btn w-full" style="border-color:var(--sys-alert);color:var(--sys-alert)">EJECUTAR SALTO</button>
                 </div>
                 <div class="flex flex-col gap-2 bg-[#05070a] p-3 border border-[#333]">
-                    <h3 class="text-[10px] font-sys text-[var(--sys-blue)] mb-1">FILTROS GLOBALES</h3>
-                    <input type="text" id="searchInput" placeholder="Buscar texto (Presiona Enter)..." class="sys-input">
-                    <select id="filterSelect" class="sys-select">
+                    <h3 class="text-[10px] font-sys text-[var(--sys-blue)] mb-1">BÚSQUEDA EN CHAT</h3>
+                    <div class="flex gap-1 mb-2">
+                        <input type="text" id="searchInput" placeholder="Palabra a buscar..." class="sys-input flex-1">
+                        <button id="searchBtn" class="sys-btn">BUSCAR</button>
+                    </div>
+                    <h3 class="text-[10px] font-sys text-[var(--sys-blue)] mb-1">FILTROS GLOBALES (OCULTAR)</h3>
+                    <select id="filterSelect" class="sys-select mb-1">
                         <option value="all">TODOS LOS MENSAJES</option>
                         <option value="photo">SOLO IMÁGENES</option>
                         <option value="sticker">SOLO STICKERS</option>
                         <option value="video">SOLO VIDEOS</option>
                         <option value="audio">SOLO AUDIOS</option>
                     </select>
-                    <div class="grid grid-cols-2 gap-2 mt-1">
+                    <div class="grid grid-cols-2 gap-2 mb-1">
                         <div><label class="text-[9px] text-gray-500">DESDE</label><input type="date" id="dateStart" class="sys-input px-1"></div>
                         <div><label class="text-[9px] text-gray-500">HASTA</label><input type="date" id="dateEnd" class="sys-input px-1"></div>
                     </div>
+                    <button id="applyFiltersBtn" class="sys-btn w-full mt-1">APLICAR FILTROS</button>
                 </div>
             </div>
             <div class="flex flex-col gap-3">
@@ -158,15 +163,24 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:55px}
         </div>
     </div>
 </div>
-<div class="main-container">
+<div class="main-container relative">
     <input type="file" id="filesInput" multiple accept=".zip,.txt,image/*,video/*,audio/*,.webp" class="hidden">
+    
     <div id="loaderUI" class="flex items-center justify-center p-4 z-10 w-full h-[80vh]">
         <div class="drop-zone solid-panel p-6 text-center w-full max-w-lg cursor-pointer" onclick="document.getElementById('filesInput').click()">
             <h2 class="text-xl font-sys font-bold text-[var(--sys-blue)] mb-1">SISTEMA INACTIVO</h2>
             <p class="text-gray-400 text-xs mb-4">Toque aquí para cargar sus archivos.<br>(Los datos se guardan permanentemente)</p>
         </div>
     </div>
-    <main id="chatUI" class="hidden">
+    
+    <main id="chatUI" class="hidden relative">
+        <div id="searchNav" class="hidden fixed top-[65px] right-2 bg-[#0a0d14] border border-[var(--sys-blue)] p-1 rounded z-40 shadow-lg flex items-center gap-1">
+            <span id="searchNavCount" class="text-xs font-mono text-gray-300 mr-2 px-1">0/0</span>
+            <button id="searchPrevBtn" class="sys-btn px-2 py-1" title="Anterior">↑</button>
+            <button id="searchNextBtn" class="sys-btn px-2 py-1" title="Siguiente">↓</button>
+            <button id="searchCloseBtn" class="sys-btn px-2 py-1" style="border-color:var(--sys-alert);color:var(--sys-alert)" title="Cerrar Búsqueda">X</button>
+        </div>
+        
         <div id="messagesDiv" class="max-w-4xl mx-auto flex flex-col pb-10 pt-2 w-full px-2"></div>
     </main>
 </div>
